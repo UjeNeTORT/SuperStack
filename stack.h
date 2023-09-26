@@ -3,7 +3,7 @@
 #include <limits.h>
 
 #define DEBUG_MODE
-#define STACK_CANARY_PROTECT
+// #define STACK_CANARY_PROTECT
 #define DATA_CANARY_PROTECT
 
 typedef int Elem_t;
@@ -62,16 +62,20 @@ struct stk_data {
 struct stack {
 
     #if (defined(STACK_CANARY_PROTECT))
-    Canary_t  left_canary;
+
+    Canary_t        left_canary;
+
     #endif // defined(STACK_CANARY_PROTECT)
 
-    struct stk_data data;
+    stk_data        data;
     int             size;
     int             capacity;      // int instead of size_t in order to catch errors
     int             init_capacity;
 
     #if (defined(STACK_CANARY_PROTECT))
-    Canary_t right_canary;
+
+    Canary_t        right_canary;
+
     #endif // defined(STACK_CANARY_PROTECT)
 };
 

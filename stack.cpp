@@ -90,6 +90,8 @@ static enum DATA_RLLC_OUT
 static enum POISON_OUT
               StackPoison        (stack *stk);
 
+static void   FreeData           (stk_data *data);
+
 static char * FormErrMsg         (size_t err_vector);
 
 static void   PrintStackDataDump (FILE *fout, const stack *stk);
@@ -106,7 +108,7 @@ enum CTOR_OUT StackCtor(stack *stk, int capacity) {
     //dont use StackErr because we are in constructor and no way it breaks
     assert(stk);
     if (!stk)
-        return CTOR_OUT::CTOR_NULL_STK;
+        return CTOR_NULL_STK;
 
     stk->size = 0;
     stk->capacity      = capacity;
@@ -134,6 +136,8 @@ enum REALLC_OUT StackRealloc(stack *stk, int new_capacity) {
     if (StackErr(stk))
         return REALLC_ERR_SIDE;
 
+    STACK_DUMP(LOG_FILE, stk, 0); //
+
     if (stk->capacity != new_capacity) {
 
         StackDataRealloc(&stk->data, new_capacity);
@@ -146,29 +150,24 @@ enum REALLC_OUT StackRealloc(stack *stk, int new_capacity) {
     if (StackErr(stk))
         return REALLC_ERR;
 
+    STACK_DUMP(LOG_FILE, stk, 0); //
+
     return REALLC_NO_ERR;
 }
 
 //-------------------------------------------------------------------------------------
 enum DTOR_OUT StackDtor(stack *stk) {
 
-    ASSERT_STACK(stk); // should we?
-
+    ASSERT_STACK(stk);
     if (StackErr(stk))
         return DTOR_ERR_SIDE;
 
     stk->size = -1;
     stk->capacity = -1;
-
-    // memset(stk->data, 0, stk->capacity); // what size should be?
-
-    free(stk->data.buf);
+    FreeData(&stk->data);
 
     err_vector = StackErr(stk);
-
     if (err_vector) return DTOR_DESTR;
-
-    STACK_DUMP(LOG_FILE, stk, err_vector);
 
     return DTOR_NOT_DESTR;
 }
@@ -177,7 +176,6 @@ enum DTOR_OUT StackDtor(stack *stk) {
 enum PUSH_OUT StackPush(stack *stk, Elem_t value) {
 
     ASSERT_STACK(stk);
-
     if (StackErr(stk))
         return PUSH_ERR_SIDE;
 
@@ -188,10 +186,10 @@ enum PUSH_OUT StackPush(stack *stk, Elem_t value) {
 
     if (stk->capacity != new_capacity) {
         StackRealloc(stk, new_capacity);
+
     }
 
     ASSERT_STACK(stk);
-
     if (StackErr(stk))
         return PUSH_ERR;
 
@@ -206,6 +204,7 @@ Elem_t StackPop(stack *stk, enum POP_OUT *err) {
         *err = POP_ERR_SIDE;
 
     stk->size--;
+    Elem_t ret_value = stk->data.buf[stk->size];
 
     ASSERT_STACK(stk);
     if (StackErr(stk))
@@ -225,7 +224,7 @@ Elem_t StackPop(stack *stk, enum POP_OUT *err) {
     else
         *err = POP_NO_ERR;
 
-    return stk->data.buf[stk->size]; // if not poison
+    return ret_value;
 }
 
 //-------------------------------------------------------------------------------------
@@ -265,35 +264,35 @@ static enum DATA_CLLC_OUT StackDataCalloc (stk_data * data, int capacity) {
             return DATA_CLLC_ERR;
 
         #endif // defined(DATA_CANARY_PROTECT)
-
     }
 
     return DATA_CLLC_NO_ERR;
 }
 
+//-------------------------------------------------------------------------------------
 static enum DATA_RLLC_OUT StackDataRealloc (stk_data * data, int new_capacity) {
 
     assert(data);
     if (!data)
         return DATA_RLLC_ERR_SIDE;
 
-    Elem_t * temp_buf = data->buf;
-
     #if (defined(DATA_CANARY_PROTECT))
 
-    data->buf = (Elem_t * ) realloc(data->l_canary, new_capacity + 2 * sizeof(Canary_t)); // CAREFULLY WITH CANARIES
+    data->buf = (Elem_t * ) realloc(data->l_canary, new_capacity * sizeof(Elem_t) + 2 * sizeof(Canary_t)); // CAREFULLY WITH CANARIES
 
     if (!data->buf)
         return DATA_RLLC_ERR;
 
     data->l_canary = (Canary_t * ) data->buf;
+   *data->l_canary = LEFT_CHICK;
 
     data->buf = (Elem_t *) ((Canary_t *) data->buf + 1);
 
     data->r_canary = (Canary_t * ) (data->buf + new_capacity);
+   *data->r_canary = RIGHT_CHICK;
 
     #else
-    printf("new capacity = %d\n", new_capacity);
+
     data->buf = (Elem_t * ) realloc(data->buf, new_capacity);
 
     assert(data->buf);
@@ -302,9 +301,28 @@ static enum DATA_RLLC_OUT StackDataRealloc (stk_data * data, int new_capacity) {
 
     #endif // defined(DATA_CANARY_PROTECT)
 
-    free(temp_buf);
-
     return DATA_RLLC_NO_ERR;
+}
+
+//-------------------------------------------------------------------------------------
+static void FreeData (stk_data *data) {
+
+   *data->l_canary = 0;
+    free(data->l_canary);
+    data->l_canary = NULL;
+
+    Elem_t * buf_ptr = data->buf;
+
+    while (buf_ptr < (void * ) data->r_canary)
+        *buf_ptr++ = 0;
+
+    // SEGMENTATION FAULT
+    free(data->buf);
+    data->buf = NULL;
+
+   *data->r_canary = 0;
+   free(data->r_canary);
+   data->r_canary = NULL;
 }
 
 //-------------------------------------------------------------------------------------
@@ -339,7 +357,7 @@ void StackDump(const char  * const fname,
     assert (err_file);
     assert (err_func);
 
-    FILE *fout = fopen(fname, "w");
+    FILE *fout = fopen(fname, "a");
 
     assert (fout);
 
@@ -353,7 +371,7 @@ void StackDump(const char  * const fname,
 
     err_msg = FormErrMsg(err_vector);
     if (*err_msg)
-        fprintf(fout, "ERRORS: %s", err_msg);
+        fprintf(fout, "ERRORS: %s\n", err_msg);
 
     PrintStackDataDump(fout, stk);
 
@@ -376,12 +394,12 @@ size_t StackErr(const stack *stk) {
     if (stk->capacity > MX_STK)             errors |=  32;
     if (stk->init_capacity > stk->capacity) errors |=  64;
 
-    #if (defined(MAMA_BIRD_PROTECT))
+    #if (defined(DATA_CANARY_PROTECT))
 
-    if (*stk->left_canary != LEFT_CHICK)     errors |= 128;
-    if (*stk->right_canary != RIGHT_CHICK)   errors |= 256;
+    if (*stk->data.l_canary != LEFT_CHICK)  errors |= 128;
+    if (*stk->data.r_canary != RIGHT_CHICK) errors |= 256;
 
-    #endif // defined(MAMA_BIRD_PROTECT)
+    #endif // defined(DATA_CANARY_PROTECT)
 
     return errors;
 }
@@ -399,7 +417,7 @@ static char * FormErrMsg(size_t err_vec) {
         ADD_ERR_MSG(err_msg, "stack null pointer");
 
     if (err_vec &  2)
-        ADD_ERR_MSG(err_msg, "data null pointer");
+        ADD_ERR_MSG(err_msg, "buf null pointer");
 
     if (err_vec &  4)
         ADD_ERR_MSG(err_msg, "size < 0");
@@ -416,15 +434,15 @@ static char * FormErrMsg(size_t err_vec) {
     if (err_vec & 64)
         ADD_ERR_MSG(err_msg, "init capacity is bigger than capacity");
 
-    #if (defined(MAMA_BIRD_PROTECT))
+    #if (defined(DATA_CANARY_PROTECT))
 
     if (err_vec & 128)
         ADD_ERR_MSG(err_msg, "left canary: attack from the left");
 
     if (err_vec & 256)
-        ADD_ERR_MSG(err_msg, "right canary: attack from the left");
+        ADD_ERR_MSG(err_msg, "right canary: attack from the right");
 
-    #endif // defined(MAMA_BIRD_PROTECT)
+    #endif // defined(DATA_CANARY_PROTECT)
 
     strcat(err_msg, "\n");
 
@@ -467,11 +485,13 @@ static void PrintStackDataDump(FILE *fout, const stack *stk) {
     assert (stk);
     assert (fout);
 
-    fprintf(fout, "data[0x%p]\n"
+    fprintf(fout, "l_canary[%p] = %lu (LEFT_CHICK  = %lu)\n", stk->data.l_canary, *stk->data.l_canary, LEFT_CHICK );
+    fprintf(fout, "r_canary[%p] = %lu (RIGHT_CHICK = %lu)\n", stk->data.r_canary, *stk->data.r_canary, RIGHT_CHICK);
+    fprintf(fout, "buf[%p]\n"
                   "\t{\n", stk->data.buf);
 
     if (!stk->data.buf) {
-        fprintf(fout, "\t\tdata null pointer, nothing to look at\n");
+        fprintf(fout, "\t\tbuf null pointer, nothing to look at\n");
     }
     else if (stk->capacity <= 0) {
         fprintf(fout, "\t\tstack capacity is 0 or less, cant print it\n");
@@ -494,7 +514,6 @@ static void PrintStackDataDump(FILE *fout, const stack *stk) {
 static enum POISON_OUT StackPoison(stack *stk) {
 
     ASSERT_STACK(stk);
-
     if (StackErr(stk))
         return POISON_ERR_SIDE;
 
@@ -504,7 +523,6 @@ static enum POISON_OUT StackPoison(stack *stk) {
         stk->data.buf[cnt++] = POISON;
 
     ASSERT_STACK(stk);
-
     if (StackErr(stk))
         return POISON_ERR;
 
