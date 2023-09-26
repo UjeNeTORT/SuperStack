@@ -38,9 +38,15 @@ vscode configuration
 
 log file with time in name
 
-how to protect initial capacity?
+how to protect initial capacity? - by hash
 
 local define (ask sanya)
+
+[FUNNY] stack dump + dump for dump + dump for dump for dump + dump for dump for dump for dump (lol)
+
+add calloc checks in Stackcalloc
+
+[DONE] lc + data + rc to struct
 
 [[noignore]]
 
@@ -57,14 +63,38 @@ local define (ask sanya)
 
 enum POISON_OUT {
     POISON_ERR_SIDE = -1,
-    POISON_NO_ERR = 0,
-    POISON_ERR = 1
+    POISON_NO_ERR   =  0,
+    POISON_ERR      =  1
 };
 
-static char * FormErrMsg         (unsigned err_vector);
-static enum POISON_OUT StackPoison        (stack *stk);
-// static int    GetNewCapacity     (int capacity, int max_capacity);
+enum DATA_CLLC_OUT {
+    DATA_CLLC_ERR_SIDE = -1,
+    DATA_CLLC_NO_ERR   =  0,
+    DATA_CLLC_ERR      =  1
+};
+
+enum DATA_RLLC_OUT {
+    DATA_RLLC_ERR_SIDE = -1,
+    DATA_RLLC_NO_ERR   =  0,
+    DATA_RLLC_ERR      =  1
+};
+
+static int    StackCalloc        (stack *stk, int capacity);    // int -> enum
+
+static enum DATA_CLLC_OUT
+              StackDataCalloc    (stk_data * data, int capacity);
+
+static enum DATA_RLLC_OUT
+              StackDataRealloc   (stk_data * data, int new_capacity);
+
+static enum POISON_OUT
+              StackPoison        (stack *stk);
+
+static char * FormErrMsg         (size_t err_vector);
+
 static void   PrintStackDataDump (FILE *fout, const stack *stk);
+
+static int    GetNewCapacity     (stack *stk);
 
 // in order not to create another one every time i need it
 unsigned err_vector = 0;
@@ -73,65 +103,50 @@ char * err_msg = (char *) calloc(MAX_ERR_MSG_STRING, sizeof(char *));
 //-------------------------------------------------------------------------------------
 enum CTOR_OUT StackCtor(stack *stk, int capacity) {
 
-    //dont use StackErr because no way it breaks
+    //dont use StackErr because we are in constructor and no way it breaks
     assert(stk);
-
     if (!stk)
         return CTOR_OUT::CTOR_NULL_STK;
 
     stk->size = 0;
-    stk->capacity = capacity;
+    stk->capacity      = capacity;
     stk->init_capacity = capacity;
 
-    if (capacity > 0) {
-
-        stk->data = (Elem_t *) calloc(capacity, sizeof(Elem_t));
-
-        StackPoison(stk);
-    }
-
-    else {
-        stk->data = NULL;
-    }
+    StackDataCalloc(&stk->data, capacity);
 
     ASSERT_STACK(stk);
-
     if (StackErr(stk))
-        return CTOR_OUT::CTOR_ERR;
+        return CTOR_ERR;
 
-    return CTOR_OUT::CTOR_NO_ERR;
+    StackPoison(stk);
+
+    ASSERT_STACK(stk);
+    if (StackErr(stk))
+        return CTOR_ERR;
+
+    return CTOR_NO_ERR;
 }
 
 //-------------------------------------------------------------------------------------
-enum REALLC_OUT StackRealloc(stack *stk) {
+enum REALLC_OUT StackRealloc(stack *stk, int new_capacity) {
 
     ASSERT_STACK(stk);
-
     if (StackErr(stk))
-        return REALLC_OUT::REALLC_ERR_SIDE;
-
-    int new_capacity = stk->capacity;
-
-    if (stk->size <= (int) stk->capacity / 4 + 1 && stk->capacity > stk->init_capacity)
-        new_capacity = stk->capacity / 2;
-
-    if (stk->size >= (int) stk->capacity * 3 / 4)
-        new_capacity = stk->capacity * 2;
+        return REALLC_ERR_SIDE;
 
     if (stk->capacity != new_capacity) {
 
-        stk->data = (Elem_t *) realloc(stk->data, new_capacity * sizeof(Elem_t));
+        StackDataRealloc(&stk->data, new_capacity);
         stk->capacity = new_capacity;
     }
 
     StackPoison(stk);
 
     ASSERT_STACK(stk);
-
     if (StackErr(stk))
-        return REALLC_OUT::REALLC_ERR;
+        return REALLC_ERR;
 
-    return REALLC_OUT::REALLC_NO_ERR;
+    return REALLC_NO_ERR;
 }
 
 //-------------------------------------------------------------------------------------
@@ -140,22 +155,22 @@ enum DTOR_OUT StackDtor(stack *stk) {
     ASSERT_STACK(stk); // should we?
 
     if (StackErr(stk))
-        return DTOR_OUT::DTOR_ERR_SIDE;
+        return DTOR_ERR_SIDE;
 
     stk->size = -1;
     stk->capacity = -1;
 
     // memset(stk->data, 0, stk->capacity); // what size should be?
 
-    free(stk->data);
+    free(stk->data.buf);
 
     err_vector = StackErr(stk);
 
-    if (err_vector) return DTOR_OUT::DTOR_DESTR;
+    if (err_vector) return DTOR_DESTR;
 
     STACK_DUMP(LOG_FILE, stk, err_vector);
 
-    return DTOR_OUT::DTOR_NOT_DESTR;
+    return DTOR_NOT_DESTR;
 }
 
 //-------------------------------------------------------------------------------------
@@ -166,10 +181,14 @@ enum PUSH_OUT StackPush(stack *stk, Elem_t value) {
     if (StackErr(stk))
         return PUSH_ERR_SIDE;
 
-    stk->data[stk->size] = value;
+    stk->data.buf[stk->size] = value;
     stk->size++;
 
-    StackRealloc(stk);
+    int new_capacity = GetNewCapacity(stk);
+
+    if (stk->capacity != new_capacity) {
+        StackRealloc(stk, new_capacity);
+    }
 
     ASSERT_STACK(stk);
 
@@ -183,20 +202,109 @@ enum PUSH_OUT StackPush(stack *stk, Elem_t value) {
 Elem_t StackPop(stack *stk, enum POP_OUT *err) {
 
     ASSERT_STACK(stk);
-
     if (StackErr(stk))
         *err = POP_ERR_SIDE;
 
     stk->size--;
 
     ASSERT_STACK(stk);
-
     if (StackErr(stk))
         *err = POP_ERR;
     else
         *err = POP_NO_ERR;
 
-    return stk->data[stk->size]; // if not poison
+    int new_capacity = GetNewCapacity(stk);
+
+    if (stk->capacity != new_capacity) {
+        StackRealloc(stk, new_capacity);
+    }
+
+    ASSERT_STACK(stk);
+    if (StackErr(stk))
+        *err = POP_ERR;
+    else
+        *err = POP_NO_ERR;
+
+    return stk->data.buf[stk->size]; // if not poison
+}
+
+//-------------------------------------------------------------------------------------
+static enum DATA_CLLC_OUT StackDataCalloc (stk_data * data, int capacity) {
+
+    assert (data);
+
+    if (!data)  return DATA_CLLC_ERR_SIDE;
+
+    if (capacity <= 0) {
+
+        data->buf = NULL;
+        return DATA_CLLC_ERR_SIDE;
+    }
+    else {
+
+        #if (defined(DATA_CANARY_PROTECT))
+
+        Elem_t * init_buf_ptr = (Elem_t * ) calloc(capacity * sizeof(Elem_t) + 2 *sizeof(Canary_t), 1);
+
+        if (!init_buf_ptr)
+            return DATA_CLLC_ERR;
+
+        data->l_canary = (Canary_t *) init_buf_ptr;
+       *data->l_canary = LEFT_CHICK;
+
+        data->buf = (Elem_t * ) ((Canary_t * ) init_buf_ptr + 1);
+
+        data->r_canary = (Canary_t * ) (data->buf + capacity);
+       *data->r_canary = RIGHT_CHICK;
+
+        #else
+
+        data->buf = (Elem_t *) calloc(capacity, sizeof(Elem_t));
+
+        if (!data->buf)
+            return DATA_CLLC_ERR;
+
+        #endif // defined(DATA_CANARY_PROTECT)
+
+    }
+
+    return DATA_CLLC_NO_ERR;
+}
+
+static enum DATA_RLLC_OUT StackDataRealloc (stk_data * data, int new_capacity) {
+
+    assert(data);
+    if (!data)
+        return DATA_RLLC_ERR_SIDE;
+
+    Elem_t * temp_buf = data->buf;
+
+    #if (defined(DATA_CANARY_PROTECT))
+
+    data->buf = (Elem_t * ) realloc(data->l_canary, new_capacity + 2 * sizeof(Canary_t)); // CAREFULLY WITH CANARIES
+
+    if (!data->buf)
+        return DATA_RLLC_ERR;
+
+    data->l_canary = (Canary_t * ) data->buf;
+
+    data->buf = (Elem_t *) ((Canary_t *) data->buf + 1);
+
+    data->r_canary = (Canary_t * ) (data->buf + new_capacity);
+
+    #else
+    printf("new capacity = %d\n", new_capacity);
+    data->buf = (Elem_t * ) realloc(data->buf, new_capacity);
+
+    assert(data->buf);
+    if (!data->buf)
+        return DATA_RLLC_ERR;
+
+    #endif // defined(DATA_CANARY_PROTECT)
+
+    free(temp_buf);
+
+    return DATA_RLLC_NO_ERR;
 }
 
 //-------------------------------------------------------------------------------------
@@ -219,7 +327,7 @@ o MAKE SEQUENCE OF FPRINTF
 */
 void StackDump(const char  * const fname,
                const stack *       stk,
-               unsigned            err_vector,
+               size_t              err_vector,
                const char  *       stk_name,
                const char  * const err_file,
                int                 err_line,
@@ -256,17 +364,24 @@ void StackDump(const char  * const fname,
 
 //-------------------------------------------------------------------------------------
 //verificator
-int StackErr(const stack *stk) {
+size_t StackErr(const stack *stk) {
 
-    unsigned errors = 0;
+    size_t errors = 0;
 
-    if (!stk)                               errors |=  1;
-    if (!stk->data)                         errors |=  2;
-    if (stk->size < 0)                      errors |=  4;
-    if (stk->capacity <= 0)                 errors |=  8;
-    if (stk->size >= stk->capacity)         errors |= 16;
-    if (stk->capacity > MX_STK)             errors |= 32;
-    if (stk->init_capacity > stk->capacity) errors |= 64;
+    if (!stk)                               errors |=   1;
+    if (!stk->data.buf)                     errors |=   2;
+    if (stk->size < 0)                      errors |=   4;
+    if (stk->capacity <= 0)                 errors |=   8;
+    if (stk->size >= stk->capacity)         errors |=  16;
+    if (stk->capacity > MX_STK)             errors |=  32;
+    if (stk->init_capacity > stk->capacity) errors |=  64;
+
+    #if (defined(MAMA_BIRD_PROTECT))
+
+    if (*stk->left_canary != LEFT_CHICK)     errors |= 128;
+    if (*stk->right_canary != RIGHT_CHICK)   errors |= 256;
+
+    #endif // defined(MAMA_BIRD_PROTECT)
 
     return errors;
 }
@@ -276,7 +391,7 @@ int StackErr(const stack *stk) {
 
 is used to form error messages
 */
-static char * FormErrMsg(unsigned err_vec) {
+static char * FormErrMsg(size_t err_vec) {
 
     strcpy(err_msg, "");
 
@@ -301,6 +416,16 @@ static char * FormErrMsg(unsigned err_vec) {
     if (err_vec & 64)
         ADD_ERR_MSG(err_msg, "init capacity is bigger than capacity");
 
+    #if (defined(MAMA_BIRD_PROTECT))
+
+    if (err_vec & 128)
+        ADD_ERR_MSG(err_msg, "left canary: attack from the left");
+
+    if (err_vec & 256)
+        ADD_ERR_MSG(err_msg, "right canary: attack from the left");
+
+    #endif // defined(MAMA_BIRD_PROTECT)
+
     strcat(err_msg, "\n");
 
     return err_msg;
@@ -308,9 +433,16 @@ static char * FormErrMsg(unsigned err_vec) {
 
 //-------------------------------------------------------------------------------------
 //TODO different modes: fast and memory-effective
-// static int GetNewCapacity(int capacity, int max_capacity) {
-//    TODO
-// }
+static int GetNewCapacity(stack *stk) {
+
+    if (stk->size <= (int) stk->capacity / 4 + 1 && stk->capacity > stk->init_capacity)
+        return stk->capacity / 2;
+
+    if (stk->size >= (int) stk->capacity * 3 / 4)
+        return stk->capacity * 2;
+
+    return stk->capacity;
+}
 
 //-------------------------------------------------------------------------------------
 /*
@@ -336,9 +468,9 @@ static void PrintStackDataDump(FILE *fout, const stack *stk) {
     assert (fout);
 
     fprintf(fout, "data[0x%p]\n"
-                  "\t{\n", stk->data);
+                  "\t{\n", stk->data.buf);
 
-    if (!stk->data) {
+    if (!stk->data.buf) {
         fprintf(fout, "\t\tdata null pointer, nothing to look at\n");
     }
     else if (stk->capacity <= 0) {
@@ -349,9 +481,9 @@ static void PrintStackDataDump(FILE *fout, const stack *stk) {
         for (int i = 0; i < stk->capacity; i++) {
 
             if (i < stk->size)
-                fprintf(fout, "\t\t*[%4d] = %10d\n", i, stk->data[i]);
+                fprintf(fout, "\t\t*[%4d] = %10d\n", i, stk->data.buf[i]);
             else
-                fprintf(fout, "\t\t [%4d] = %10d %s\n", i, stk->data[i], (stk->data[i] == POISON) ? "(POISON)" : "");
+                fprintf(fout, "\t\t [%4d] = %10d %s\n", i, stk->data.buf[i], (stk->data.buf[i] == POISON) ? "(POISON)" : "");
 
         }
     }
@@ -369,7 +501,7 @@ static enum POISON_OUT StackPoison(stack *stk) {
     int cnt = stk->size;
 
     while (cnt < stk->capacity)
-        stk->data[cnt++] = POISON;
+        stk->data.buf[cnt++] = POISON;
 
     ASSERT_STACK(stk);
 

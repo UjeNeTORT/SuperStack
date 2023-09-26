@@ -1,8 +1,13 @@
-//  c++ library is calles "stack", "not stack.h", so no naming conflicts
+//  c++ library is called "stack", "not stack.h", so no naming conflicts
 
 #include <limits.h>
 
 #define DEBUG_MODE
+#define STACK_CANARY_PROTECT
+#define DATA_CANARY_PROTECT
+
+typedef int Elem_t;
+typedef size_t Canary_t;
 
 #if (defined(DEBUG_MODE))
 
@@ -25,7 +30,16 @@
     #define STACK_DUMP(fname, stk, err_vector) ;
     #define ADD_ERR_MSG(prev, msg)             ;
     #define ASSERT_STACK(stk)                  ;
-#endif
+
+#endif // defined(DEBUG_MODE)
+
+// i mean canary protect. I have right to laugh while coding, dont look at me like that
+#if (defined(STACK_CANARY_PROTECT) || defined(DATA_CANARY_PROTECT))
+    const Canary_t LEFT_CHICK  = 0xB38F0F83F03F80AA; //  in 0b it looks like 101100111000...10101010
+    const Canary_t RIGHT_CHICK = 0xB38F0F83F03F80AA; //  in 0b it looks like 101100111000...10101010
+#else
+
+#endif // defined(MAMA_BIRD_PROTECT)
 
 const char * const LOG_FILE = "log.log";
 
@@ -33,13 +47,32 @@ const int    MX_STK             = 100;
 const int    POISON             = 0xD00D1E;
 const size_t MAX_ERR_MSG_STRING = 400;
 
-typedef int Elem_t;
+struct stk_data {
+
+    Elem_t *buf;
+
+    #if (defined(DATA_CANARY_PROTECT))
+
+    Canary_t *l_canary;
+    Canary_t *r_canary;
+
+    #endif // defined(DATA_CANARY_PROTECT)
+};
 
 struct stack {
-    Elem_t* data;
-    int size;
-    int capacity;
-    int init_capacity;
+
+    #if (defined(STACK_CANARY_PROTECT))
+    Canary_t  left_canary;
+    #endif // defined(STACK_CANARY_PROTECT)
+
+    struct stk_data data;
+    int             size;
+    int             capacity;      // int instead of size_t in order to catch errors
+    int             init_capacity;
+
+    #if (defined(STACK_CANARY_PROTECT))
+    Canary_t right_canary;
+    #endif // defined(STACK_CANARY_PROTECT)
 };
 
 enum CTOR_OUT {
@@ -78,7 +111,7 @@ StackCtor(stack *stk,
           int    capacity);
 
 enum REALLC_OUT
-StackRealloc(stack *stk);
+StackRealloc(stack *stk, int new_capacity);
 
 enum DTOR_OUT
 StackDtor(stack *stk);
@@ -94,10 +127,10 @@ StackPop(stack   *     stk,
 void
 StackDump(const char  * const fname,
           const stack *       stk,
-          unsigned            err_vector,
+          size_t              err_vector,
           const char  * const stk_name,
           const char  * const err_file,
           int                 err_line,
           const char  * const err_func);
 
-int StackErr(const stack *stk);
+size_t StackErr(const stack *stk);
