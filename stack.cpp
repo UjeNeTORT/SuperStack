@@ -79,8 +79,6 @@ enum DATA_RLLC_OUT {
     DATA_RLLC_ERR      =  1
 };
 
-static int    StackCalloc        (stack *stk, int capacity);    // int -> enum
-
 static enum DATA_CLLC_OUT
               StackDataCalloc    (stk_data * data, int capacity);
 
@@ -110,6 +108,13 @@ enum CTOR_OUT StackCtor(stack *stk, int capacity) {
     if (!stk)
         return CTOR_NULL_STK;
 
+    #if (defined(STACK_CANARY_PROTECT))
+
+    stk->l_canary = LEFT_CHICK;
+    stk->r_canary = RIGHT_CHICK;
+
+    #endif // defined(STACK_CANARY_PROTECT)
+
     stk->size = 0;
     stk->capacity      = capacity;
     stk->init_capacity = capacity;
@@ -136,8 +141,6 @@ enum REALLC_OUT StackRealloc(stack *stk, int new_capacity) {
     if (StackErr(stk))
         return REALLC_ERR_SIDE;
 
-    STACK_DUMP(LOG_FILE, stk, 0); //
-
     if (stk->capacity != new_capacity) {
 
         StackDataRealloc(&stk->data, new_capacity);
@@ -160,16 +163,21 @@ enum DTOR_OUT StackDtor(stack *stk) {
     if (StackErr(stk))
         return DTOR_ERR_SIDE;
 
+    #if (defined(STACK_CANARY_PROTECT))
+
+    stk->l_canary = NULL;
+    stk->r_canary = NULL;
+
+    #endif // defined(STACK_CANARY_PROTECT)
+
     stk->size     = -1;
     stk->capacity = -1;
 
     FreeData(&stk->data);
 
-    err_vector = StackErr(stk);
-    if (err_vector) return DTOR_DESTR;
+    stk = NULL; // didnt test
 
-    STACK_DUMP(LOG_FILE, stk, 0);
-    return DTOR_NOT_DESTR;
+    return DTOR_DESTR;
 }
 
 //-------------------------------------------------------------------------------------
@@ -364,6 +372,9 @@ void StackDump(const char  * const fname,
 
     fprintf(fout, "{\n");
 
+    fprintf(fout, "left  stack canary[%p] = %lu (%s)\n", &stk->l_canary, stk->l_canary, (stk->l_canary == LEFT_CHICK)  ? "ok" : "corrupted");
+    fprintf(fout, "right stack canary[%p] = %lu (%s)\n", &stk->r_canary, stk->r_canary, (stk->r_canary == RIGHT_CHICK) ? "ok" : "corrupted");
+
     fprintf(fout, "size     = %d (MX_STK = %d)\n", stk->size, MX_STK);
     fprintf(fout, "capacity = %d\n", stk->capacity);
 
@@ -384,20 +395,27 @@ size_t StackErr(const stack *stk) {
 
     size_t errors = 0;
 
-    if (!stk)                               errors |=   1;
-    if (!stk->data.buf)                     errors |=   2;
-    if (stk->size < 0)                      errors |=   4;
-    if (stk->capacity <= 0)                 errors |=   8;
-    if (stk->size >= stk->capacity)         errors |=  16;
-    if (stk->capacity > MX_STK)             errors |=  32;
-    if (stk->init_capacity > stk->capacity) errors |=  64;
+    if (!stk)                               errors |=    1;
+    if (!stk->data.buf)                     errors |=    2;
+    if (stk->size < 0)                      errors |=    4;
+    if (stk->capacity <= 0)                 errors |=    8;
+    if (stk->size >= stk->capacity)         errors |=   16;
+    if (stk->capacity > MX_STK)             errors |=   32;
+    if (stk->init_capacity > stk->capacity) errors |=   64;
 
     #if (defined(DATA_CANARY_PROTECT))
 
-    if (*stk->data.l_canary != LEFT_CHICK)  errors |= 128;
-    if (*stk->data.r_canary != RIGHT_CHICK) errors |= 256;
+    if (*stk->data.l_canary != LEFT_CHICK ) errors |=  128;
+    if (*stk->data.r_canary != RIGHT_CHICK) errors |=  256;
 
     #endif // defined(DATA_CANARY_PROTECT)
+
+    #if (defined(STACK_CANARY_PROTECT))
+
+    if (stk->l_canary != LEFT_CHICK )       errors |=  512;
+    if (stk->r_canary != RIGHT_CHICK)       errors |= 1024;
+
+    #endif // defined(STACK_CANARY_PROTECT)
 
     return errors;
 }
@@ -435,12 +453,22 @@ static char * FormErrMsg(size_t err_vec) {
     #if (defined(DATA_CANARY_PROTECT))
 
     if (err_vec & 128)
-        ADD_ERR_MSG(err_msg, "left canary: attack from the left");
+        ADD_ERR_MSG(err_msg, "left canary: data attacked from the left");
 
     if (err_vec & 256)
-        ADD_ERR_MSG(err_msg, "right canary: attack from the right");
+        ADD_ERR_MSG(err_msg, "right canary: data attacked from the right");
 
     #endif // defined(DATA_CANARY_PROTECT)
+
+    #if (defined(STACK_CANARY_PROTECT))
+
+    if (err_vec & 512)
+        ADD_ERR_MSG(err_msg, "left canary: stack attacked from the left");
+
+    if (err_vec & 1024)
+        ADD_ERR_MSG(err_msg, "right canary: stack attacked from the right");
+
+    #endif // defined(STACK_CANARY_PROTECT)
 
     strcat(err_msg, "\n");
 
@@ -448,7 +476,6 @@ static char * FormErrMsg(size_t err_vec) {
 }
 
 //-------------------------------------------------------------------------------------
-//TODO different modes: fast and memory-effective
 static int GetNewCapacity(stack *stk) {
 
     if (stk->size <= (int) stk->capacity / 4 + 1 && stk->capacity > stk->init_capacity)
@@ -483,8 +510,8 @@ static void PrintStackDataDump(FILE *fout, const stack *stk) {
     assert (stk);
     assert (fout);
 
-    fprintf(fout, "l_canary[%p] = %lu (LEFT_CHICK  = %lu)\n", stk->data.l_canary, *stk->data.l_canary, LEFT_CHICK );
-    fprintf(fout, "r_canary[%p] = %lu (RIGHT_CHICK = %lu)\n", stk->data.r_canary, *stk->data.r_canary, RIGHT_CHICK);
+    fprintf(fout, "l_canary[%p] = %lu (%s)\n", stk->data.l_canary, *stk->data.l_canary, (*stk->data.l_canary == LEFT_CHICK)  ? "ok" : "corrupted");
+    fprintf(fout, "r_canary[%p] = %lu (%s)\n", stk->data.r_canary, *stk->data.r_canary, (*stk->data.r_canary == RIGHT_CHICK) ? "ok" : "corrupted");
     fprintf(fout, "buf[%p]\n"
                   "\t{\n", stk->data.buf);
 

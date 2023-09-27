@@ -3,12 +3,14 @@
 #include <limits.h>
 
 #define DEBUG_MODE
-// #define STACK_CANARY_PROTECT
+#define STACK_CANARY_PROTECT
 #define DATA_CANARY_PROTECT
 
-typedef int Elem_t;
+//-------------------------------------------------------------------------------------
+typedef int      Elem_t;
 typedef size_t Canary_t;
 
+//-------------------------------------------------------------------------------------
 #if (defined(DEBUG_MODE))
 
     #define STACK_DUMP(fname, stk, err_vector) StackDump((fname), (stk), (err_vector), (#stk), __FILE__, __LINE__, __FUNCTION__)
@@ -33,20 +35,23 @@ typedef size_t Canary_t;
 
 #endif // defined(DEBUG_MODE)
 
+//-------------------------------------------------------------------------------------
 // i mean canary protect. I have right to laugh while coding, dont look at me like that
 #if (defined(STACK_CANARY_PROTECT) || defined(DATA_CANARY_PROTECT))
     const Canary_t LEFT_CHICK  = 0xB38F0F83F03F80AA; //  in 0b it looks like 101100111000...10101010
     const Canary_t RIGHT_CHICK = 0xB38F0F83F03F80AA; //  in 0b it looks like 101100111000...10101010
 #else
 
-#endif // defined(MAMA_BIRD_PROTECT)
+#endif // defined(defined(STACK_CANARY_PROTECT) || defined(DATA_CANARY_PROTECT))
 
+//-------------------------------------------------------------------------------------
 const char * const LOG_FILE = "log.log";
 
 const int    MX_STK             = 100;
 const int    POISON             = 0xD00D1E;
 const size_t MAX_ERR_MSG_STRING = 400;
 
+//-------------------------------------------------------------------------------------
 struct stk_data {
 
     Elem_t *buf;
@@ -58,12 +63,12 @@ struct stk_data {
 
     #endif // defined(DATA_CANARY_PROTECT)
 };
-
+//-------------------------------------------------------------------------------------
 struct stack {
 
     #if (defined(STACK_CANARY_PROTECT))
 
-    Canary_t        left_canary;
+    Canary_t        l_canary;
 
     #endif // defined(STACK_CANARY_PROTECT)
 
@@ -74,11 +79,12 @@ struct stack {
 
     #if (defined(STACK_CANARY_PROTECT))
 
-    Canary_t        right_canary;
+    Canary_t        r_canary;
 
     #endif // defined(STACK_CANARY_PROTECT)
 };
 
+//-------------------------------------------------------------------------------------
 enum CTOR_OUT {
     CTOR_NULL_STK = -1,
     CTOR_NO_ERR   =  0,
@@ -110,24 +116,30 @@ enum POP_OUT {
     POP_ERR      =  1
 };
 
+//-------------------------------------------------------------------------------------
 enum CTOR_OUT
 StackCtor(stack *stk,
           int    capacity);
 
+//-------------------------------------------------------------------------------------
 enum REALLC_OUT
 StackRealloc(stack *stk, int new_capacity);
 
+//-------------------------------------------------------------------------------------
 enum DTOR_OUT
 StackDtor(stack *stk);
 
+//-------------------------------------------------------------------------------------
 enum PUSH_OUT
 StackPush(stack *stk,
           Elem_t value);
 
+//-------------------------------------------------------------------------------------
 Elem_t
 StackPop(stack   *     stk,
          enum POP_OUT *err);
 
+//-------------------------------------------------------------------------------------
 void
 StackDump(const char  * const fname,
           const stack *       stk,
@@ -137,4 +149,5 @@ StackDump(const char  * const fname,
           int                 err_line,
           const char  * const err_func);
 
+//-------------------------------------------------------------------------------------
 size_t StackErr(const stack *stk);

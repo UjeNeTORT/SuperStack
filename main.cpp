@@ -60,9 +60,7 @@ int main() {
     else
         printf("error in pop, please, launch in debug mode to see\n");
 
-    printf("before dtor\n"); //
     StackDtor(&cat);
-    printf("after  dtor\n"); //
 
     printf("we are at the end! EEEEEEEOOOOOO\n");
     return 0;
