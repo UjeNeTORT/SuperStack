@@ -372,8 +372,12 @@ void StackDump(const char  * const fname,
 
     fprintf(fout, "{\n");
 
+    #if (defined(STACK_CANARY_PROTECT))
+
     fprintf(fout, "left  stack canary[%p] = %lu (%s)\n", &stk->l_canary, stk->l_canary, (stk->l_canary == LEFT_CHICK)  ? "ok" : "corrupted");
     fprintf(fout, "right stack canary[%p] = %lu (%s)\n", &stk->r_canary, stk->r_canary, (stk->r_canary == RIGHT_CHICK) ? "ok" : "corrupted");
+
+    #endif // defined(STACK_CANARY_PROTECT)
 
     fprintf(fout, "size     = %d (MX_STK = %d)\n", stk->size, MX_STK);
     fprintf(fout, "capacity = %d\n", stk->capacity);
@@ -510,8 +514,13 @@ static void PrintStackDataDump(FILE *fout, const stack *stk) {
     assert (stk);
     assert (fout);
 
+    #if (defined(DATA_CANARY_PROTECT))
+
     fprintf(fout, "l_canary[%p] = %lu (%s)\n", stk->data.l_canary, *stk->data.l_canary, (*stk->data.l_canary == LEFT_CHICK)  ? "ok" : "corrupted");
     fprintf(fout, "r_canary[%p] = %lu (%s)\n", stk->data.r_canary, *stk->data.r_canary, (*stk->data.r_canary == RIGHT_CHICK) ? "ok" : "corrupted");
+
+    #endif // defined(DATA_CANARY_PROTECT)
+
     fprintf(fout, "buf[%p]\n"
                   "\t{\n", stk->data.buf);
 
