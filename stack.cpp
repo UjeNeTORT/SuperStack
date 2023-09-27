@@ -150,8 +150,6 @@ enum REALLC_OUT StackRealloc(stack *stk, int new_capacity) {
     if (StackErr(stk))
         return REALLC_ERR;
 
-    STACK_DUMP(LOG_FILE, stk, 0); //
-
     return REALLC_NO_ERR;
 }
 
@@ -162,13 +160,15 @@ enum DTOR_OUT StackDtor(stack *stk) {
     if (StackErr(stk))
         return DTOR_ERR_SIDE;
 
-    stk->size = -1;
+    stk->size     = -1;
     stk->capacity = -1;
+
     FreeData(&stk->data);
 
     err_vector = StackErr(stk);
     if (err_vector) return DTOR_DESTR;
 
+    STACK_DUMP(LOG_FILE, stk, 0);
     return DTOR_NOT_DESTR;
 }
 
@@ -307,22 +307,20 @@ static enum DATA_RLLC_OUT StackDataRealloc (stk_data * data, int new_capacity) {
 //-------------------------------------------------------------------------------------
 static void FreeData (stk_data *data) {
 
-   *data->l_canary = 0;
-    free(data->l_canary);
-    data->l_canary = NULL;
-
     Elem_t * buf_ptr = data->buf;
 
     while (buf_ptr < (void * ) data->r_canary)
-        *buf_ptr++ = 0;
+        *buf_ptr++ = POISON; //DEAD MEMORY
 
-    // SEGMENTATION FAULT
-    free(data->buf);
-    data->buf = NULL;
-
+   *data->l_canary = 0;
    *data->r_canary = 0;
-   free(data->r_canary);
-   data->r_canary = NULL;
+
+    free(data->l_canary);
+
+    data->l_canary = NULL;
+    data->buf      = NULL;
+    data->r_canary = NULL;
+
 }
 
 //-------------------------------------------------------------------------------------
