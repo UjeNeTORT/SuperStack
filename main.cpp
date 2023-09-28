@@ -35,7 +35,6 @@ int main() {
     enum POP_OUT pop_err = POP_NO_ERR;
 
     printf("%d\n", StackPop(&cat, &pop_err));
-    // cat.data.buf[0] = 1000;
     printf("%d\n", StackPop(&cat, &pop_err));
     printf("%d\n", StackPop(&cat, &pop_err));
     printf("%d\n", StackPop(&cat, &pop_err));

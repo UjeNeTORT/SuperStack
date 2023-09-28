@@ -15,7 +15,7 @@ stack dump: fix ########
 
 [DONE] make stderr printfs if somethings broken
 
-add constant to manually increase / decrease stack capacity (now it is 2)
+[DONE] add constant to manually increase / decrease stack capacity (now it is 2)
 
 [DONE] StackPop - make argument to catch errors
 
@@ -27,10 +27,10 @@ poison is not portable on other Elem_ts - TOASK
 
 [DONE] StackRealloc does not set other values to POISON - make func for set to poison
 
-StackDtor memset musor before free
+[DONE] StackDtor memset musor before free
 
-canary protect (FAT MAMA BIRD)
-canary to условная компиляция
+[DONE] canary protect (FAT MAMA BIRD)
+[DONE] canary to условная компиляция
 
 vscode configuration
 
@@ -128,8 +128,8 @@ enum CTOR_OUT StackCtor(stack *stk, int capacity) {
 
     StackPoison(stk);
 
-    ASSERT_STACK(stk, F_MID);
-    if (StackErr(stk, F_MID))
+    ASSERT_STACK(stk, F_END);
+    if (StackErr(stk, F_END))
         return CTOR_ERR;
 
     return CTOR_NO_ERR;
@@ -138,8 +138,8 @@ enum CTOR_OUT StackCtor(stack *stk, int capacity) {
 //-------------------------------------------------------------------------------------
 enum REALLC_OUT StackRealloc(stack *stk, int new_capacity) {
 
-    ASSERT_STACK(stk, F_BEGIN);
-    if (StackErr(stk, F_BEGIN))
+    ASSERT_STACK(stk, F_MID);
+    if (StackErr(stk, F_MID))
         return REALLC_ERR_SIDE;
 
     if (stk->capacity != new_capacity) {
@@ -186,7 +186,6 @@ enum PUSH_OUT StackPush(stack *stk, Elem_t value) {
     ASSERT_STACK(stk, F_BEGIN);
     if (StackErr(stk, F_BEGIN))
         return PUSH_ERR_SIDE;
-
 
     int new_capacity = GetNewCapacity(stk);
     if (stk->capacity != new_capacity)
@@ -454,17 +453,10 @@ size_t StackErr(stack *stk, enum CALL_FROM call_from) {
 
         Hash_t new_hash = 0;
 
-        #if (defined(DATA_CANARY_PROTECT))
+        if (stk->data.buf) {
 
-            if (stk->data.l_canary)
-                new_hash = HashMod(stk->data.l_canary, stk->capacity * sizeof(Elem_t) + 2 * sizeof(Canary_t));
-
-        #else
-
-            if (stk->data.buf)
-                Hash_t new_hash = HashMod(stk->data.buf, stk->capacity * sizeof(Elem_t));
-
-        #endif // defined(DATA_CANARY_PROTECT)
+            new_hash = HashMod(stk->data.buf, stk->capacity * sizeof(Elem_t));
+        }
 
         if (call_from == F_BEGIN) {
             if (new_hash != stk->data.hash_sum) errors |= 2048;
@@ -603,8 +595,8 @@ static void PrintStackDataDump(FILE *fout, const stack *stk) {
 
 static enum POISON_OUT StackPoison(stack *stk) {
 
-    ASSERT_STACK(stk, F_BEGIN);
-    if (StackErr(stk, F_BEGIN))
+    ASSERT_STACK(stk, F_MID);
+    if (StackErr(stk, F_MID))
         return POISON_ERR_SIDE;
 
     int cnt = stk->size;
@@ -612,8 +604,8 @@ static enum POISON_OUT StackPoison(stack *stk) {
     while (cnt < stk->capacity)
         stk->data.buf[cnt++] = POISON;
 
-    ASSERT_STACK(stk, F_END);
-    if (StackErr(stk, F_END))
+    ASSERT_STACK(stk, F_MID);
+    if (StackErr(stk, F_MID))
         return POISON_ERR;
 
     return POISON_NO_ERR;
