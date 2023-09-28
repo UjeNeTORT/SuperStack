@@ -9,9 +9,11 @@ int main() {
 
     enum PUSH_OUT push_err = PUSH_NO_ERR;
 
-    StackCtor(&cat, 1);
+    StackCtor(&cat, 10);
+
 
     StackPush(&cat,  1);
+
     StackPush(&cat,  2);
     StackPush(&cat,  3);
     StackPush(&cat,  4);

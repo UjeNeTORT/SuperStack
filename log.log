@@ -1,184 +1,102 @@
-stack[0x7fff19023e40] stk from ######## (-1)
-             called from stack.cpp (207) StackPop
+stack[0x7fff49d9ae90] stk from ######## (-1)
+             called from stack.cpp (127) StackCtor
 {
-left  stack canary[0x7fff19023e40] = 12938577313804550314 (ok)
-right stack canary[0x7fff19023e78] = 12938577313804550314 (ok)
-size     = 16 (MX_STK = 100)
-capacity = 32
-ERRORS: data hashes dont match, sudden attack
+size     = 0 (MX_STK = 100)
+capacity = 10
+stack hash = 0
+ERRORS: data hashes does not match, sudden attack, stack hash does not match, sudden attack
 
-hash_sum = 218157672
-l_canary[0x557b0a4c7f90] = 12938577313804550314 (ok)
-r_canary[0x557b0a4c8018] = 12938577313804550314 (ok)
-buf[0x557b0a4c7f98]
+hash_sum = 235888513
+l_canary[0x562bcfe3df50] = 12938577313804550314 (ok)
+r_canary[0x562bcfe3df80] = 12938577313804550314 (ok)
+buf[0x562bcfe3df58]
 	{
-		*[   0] =       1000
-		*[   1] =          2
-		*[   2] =          3
-		*[   3] =          4
-		*[   4] =          5
-		*[   5] =          6
-		*[   6] =          7
-		*[   7] =          8
-		*[   8] =          9
-		*[   9] =         10
-		*[  10] =         11
-		*[  11] =         12
-		*[  12] =         13
-		*[  13] =         14
-		*[  14] =         15
-		*[  15] =         16
-		 [  16] =   13634846 (POISON)
-		 [  17] =   13634846 (POISON)
-		 [  18] =   13634846 (POISON)
-		 [  19] =   13634846 (POISON)
-		 [  20] =   13634846 (POISON)
-		 [  21] =   13634846 (POISON)
-		 [  22] =   13634846 (POISON)
-		 [  23] =   13634846 (POISON)
-		 [  24] =   13634846 (POISON)
-		 [  25] =   13634846 (POISON)
-		 [  26] =   13634846 (POISON)
-		 [  27] =   13634846 (POISON)
-		 [  28] =   13634846 (POISON)
-		 [  29] =   13634846 (POISON)
-		 [  30] =   13634846 (POISON)
-		 [  31] =   13634846 (POISON)
+		 [   0] =          0 
+		 [   1] =          0 
+		 [   2] =          0 
+		 [   3] =          0 
+		 [   4] =          0 
+		 [   5] =          0 
+		 [   6] =          0 
+		 [   7] =          0 
+		 [   8] =          0 
+		 [   9] =          0 
 	}
 }
-stack[0x7ffcd9aab8c0] stk from ######## (-1)
-             called from stack.cpp (207) StackPop
+stack[0x7ffe63ad4740] stk from ######## (-1)
+             called from stack.cpp (127) StackCtor
 {
-left  stack canary[0x7ffcd9aab8c0] = 12938577313804550314 (ok)
-right stack canary[0x7ffcd9aab8e8] = 12938577313804550314 (ok)
-size     = 16 (MX_STK = 100)
-capacity = 32
-ERRORS: data hashes dont match, sudden attack
+size     = 0 (MX_STK = 100)
+capacity = 10
+stack hash = 0
+ERRORS: data hashes does not match, sudden attack, stack hash does not match, sudden attack
 
-hash_sum = 218157672
-buf[0x55cb480d5f80]
+hash_sum = 235888513
+l_canary[0x5556d3f59f50] = 12938577313804550314 (ok)
+r_canary[0x5556d3f59f80] = 12938577313804550314 (ok)
+buf[0x5556d3f59f58]
 	{
-		*[   0] =       1000
-		*[   1] =          2
-		*[   2] =          3
-		*[   3] =          4
-		*[   4] =          5
-		*[   5] =          6
-		*[   6] =          7
-		*[   7] =          8
-		*[   8] =          9
-		*[   9] =         10
-		*[  10] =         11
-		*[  11] =         12
-		*[  12] =         13
-		*[  13] =         14
-		*[  14] =         15
-		*[  15] =         16
-		 [  16] =   13634846 (POISON)
-		 [  17] =   13634846 (POISON)
-		 [  18] =   13634846 (POISON)
-		 [  19] =   13634846 (POISON)
-		 [  20] =   13634846 (POISON)
-		 [  21] =   13634846 (POISON)
-		 [  22] =   13634846 (POISON)
-		 [  23] =   13634846 (POISON)
-		 [  24] =   13634846 (POISON)
-		 [  25] =   13634846 (POISON)
-		 [  26] =   13634846 (POISON)
-		 [  27] =   13634846 (POISON)
-		 [  28] =   13634846 (POISON)
-		 [  29] =   13634846 (POISON)
-		 [  30] =   13634846 (POISON)
-		 [  31] =   13634846 (POISON)
+		 [   0] =          0 
+		 [   1] =          0 
+		 [   2] =          0 
+		 [   3] =          0 
+		 [   4] =          0 
+		 [   5] =          0 
+		 [   6] =          0 
+		 [   7] =          0 
+		 [   8] =          0 
+		 [   9] =          0 
 	}
 }
-stack[0x7ffe6b6572b0] stk from ######## (-1)
-             called from stack.cpp (207) StackPop
+stack[0x7ffc2047fdc0] stk from ######## (-1)
+             called from stack.cpp (131) StackCtor
 {
-size     = 16 (MX_STK = 100)
-capacity = 32
-ERRORS: data hashes dont match, sudden attack
+size     = 0 (MX_STK = 100)
+capacity = 10
+left  stack canary[0x7ffc2047fdc0] = 12938577313804550314 (ok)
+right stack canary[0x7ffc2047fdf8] = 12938577313804550314 (ok)
+ERRORS: data hashes does not match, sudden attack
 
-hash_sum = 218157672
-l_canary[0x55863643ff90] = 12938577313804550314 (ok)
-r_canary[0x558636440018] = 12938577313804550314 (ok)
-buf[0x55863643ff98]
+hash_sum = 235888513
+l_canary[0x55daa7282f30] = 12938577313804550314 (ok)
+r_canary[0x55daa7282f60] = 12938577313804550314 (ok)
+buf[0x55daa7282f38]
 	{
-		*[   0] =       1000
-		*[   1] =          2
-		*[   2] =          3
-		*[   3] =          4
-		*[   4] =          5
-		*[   5] =          6
-		*[   6] =          7
-		*[   7] =          8
-		*[   8] =          9
-		*[   9] =         10
-		*[  10] =         11
-		*[  11] =         12
-		*[  12] =         13
-		*[  13] =         14
-		*[  14] =         15
-		*[  15] =         16
-		 [  16] =   13634846 (POISON)
-		 [  17] =   13634846 (POISON)
-		 [  18] =   13634846 (POISON)
-		 [  19] =   13634846 (POISON)
-		 [  20] =   13634846 (POISON)
-		 [  21] =   13634846 (POISON)
-		 [  22] =   13634846 (POISON)
-		 [  23] =   13634846 (POISON)
-		 [  24] =   13634846 (POISON)
-		 [  25] =   13634846 (POISON)
-		 [  26] =   13634846 (POISON)
-		 [  27] =   13634846 (POISON)
-		 [  28] =   13634846 (POISON)
-		 [  29] =   13634846 (POISON)
-		 [  30] =   13634846 (POISON)
-		 [  31] =   13634846 (POISON)
+		 [   0] =          0 
+		 [   1] =          0 
+		 [   2] =          0 
+		 [   3] =          0 
+		 [   4] =          0 
+		 [   5] =          0 
+		 [   6] =          0 
+		 [   7] =          0 
+		 [   8] =          0 
+		 [   9] =          0 
 	}
 }
-stack[0x7ffdd9dd9560] stk from ######## (-1)
-             called from stack.cpp (207) StackPop
+stack[0x7ffeee39ed60] stk from ######## (-1)
+             called from stack.cpp (131) StackCtor
 {
-size     = 16 (MX_STK = 100)
-capacity = 32
-ERRORS: data hashes dont match, sudden attack
+size     = 0 (MX_STK = 100)
+capacity = 10
+left  stack canary[0x7ffeee39ed60] = 12938577313804550314 (ok)
+right stack canary[0x7ffeee39ed98] = 12938577313804550314 (ok)
+ERRORS: data hashes does not match, sudden attack
 
-hash_sum = 218157672
-buf[0x556895006f80]
+hash_sum = 235888513
+l_canary[0x55e92d235340] = 12938577313804550314 (ok)
+r_canary[0x55e92d235370] = 12938577313804550314 (ok)
+buf[0x55e92d235348]
 	{
-		*[   0] =       1000
-		*[   1] =          2
-		*[   2] =          3
-		*[   3] =          4
-		*[   4] =          5
-		*[   5] =          6
-		*[   6] =          7
-		*[   7] =          8
-		*[   8] =          9
-		*[   9] =         10
-		*[  10] =         11
-		*[  11] =         12
-		*[  12] =         13
-		*[  13] =         14
-		*[  14] =         15
-		*[  15] =         16
-		 [  16] =   13634846 (POISON)
-		 [  17] =   13634846 (POISON)
-		 [  18] =   13634846 (POISON)
-		 [  19] =   13634846 (POISON)
-		 [  20] =   13634846 (POISON)
-		 [  21] =   13634846 (POISON)
-		 [  22] =   13634846 (POISON)
-		 [  23] =   13634846 (POISON)
-		 [  24] =   13634846 (POISON)
-		 [  25] =   13634846 (POISON)
-		 [  26] =   13634846 (POISON)
-		 [  27] =   13634846 (POISON)
-		 [  28] =   13634846 (POISON)
-		 [  29] =   13634846 (POISON)
-		 [  30] =   13634846 (POISON)
-		 [  31] =   13634846 (POISON)
+		 [   0] =          0 
+		 [   1] =          0 
+		 [   2] =          0 
+		 [   3] =          0 
+		 [   4] =          0 
+		 [   5] =          0 
+		 [   6] =          0 
+		 [   7] =          0 
+		 [   8] =          0 
+		 [   9] =          0 
 	}
 }

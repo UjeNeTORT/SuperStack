@@ -90,6 +90,10 @@ struct stack {
     int             capacity;      // int instead of size_t in order to catch errors
     int             init_capacity;
 
+    #if (defined(STACK_HASH_PROTECT))
+    Hash_t    *     hash_sum;
+    #endif // defined(STACK_HASH_PROTECT)
+
     #if (defined(STACK_CANARY_PROTECT))
 
     Canary_t        r_canary;

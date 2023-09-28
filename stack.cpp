@@ -120,6 +120,12 @@ enum CTOR_OUT StackCtor(stack *stk, int capacity) {
     stk->capacity      = capacity;
     stk->init_capacity = capacity;
 
+    #if (defined(STACK_HASH_PROTECT))
+
+    stk->hash_sum = (Hash_t *) calloc(1, sizeof(Hash_t));
+
+    #endif // defined(STACK_HASH_PROTECT)
+
     StackDataCalloc(&stk->data, capacity);
 
     ASSERT_STACK(stk, F_MID);
@@ -314,38 +320,38 @@ static enum DATA_RLLC_OUT StackDataRealloc (stk_data * data, int new_capacity) {
 
     #if (defined(DATA_CANARY_PROTECT))
 
-    data->buf = (Elem_t * ) realloc(data->l_canary, new_capacity * sizeof(Elem_t) + 2 * sizeof(Canary_t)); // CAREFULLY WITH CANARIES
+        data->buf = (Elem_t * ) realloc(data->l_canary, new_capacity * sizeof(Elem_t) + 2 * sizeof(Canary_t)); // CAREFULLY WITH CANARIES
 
-    if (!data->buf)
-        return DATA_RLLC_ERR;
+        if (!data->buf)
+            return DATA_RLLC_ERR;
 
-    data->l_canary = (Canary_t * ) data->buf;
-   *data->l_canary = LEFT_CHICK;
+        data->l_canary = (Canary_t * ) data->buf;
+        *data->l_canary = LEFT_CHICK;
 
-    data->buf = (Elem_t *) ((Canary_t *) data->buf + 1);
+        data->buf = (Elem_t *) ((Canary_t *) data->buf + 1);
 
-    data->r_canary = (Canary_t * ) (data->buf + new_capacity);
-   *data->r_canary = RIGHT_CHICK;
+        data->r_canary = (Canary_t * ) (data->buf + new_capacity);
+        *data->r_canary = RIGHT_CHICK;
 
-    #if (defined(DATA_HASH_PROTECT))
+        #if (defined(DATA_HASH_PROTECT))
 
-    data->hash_sum = HashMod(data->l_canary, new_capacity * sizeof(Elem_t) + 2 * sizeof(Canary_t));
+            data->hash_sum = HashMod(data->l_canary, new_capacity * sizeof(Elem_t) + 2 * sizeof(Canary_t));
 
-    #endif // defined(DATA_HASH_PROTECT)
+        #endif // defined(DATA_HASH_PROTECT)
 
     #else
 
-    data->buf = (Elem_t * ) realloc(data->buf, new_capacity * sizeof(Elem_t));
+        data->buf = (Elem_t * ) realloc(data->buf, new_capacity * sizeof(Elem_t));
 
-    assert(data->buf);
-    if (!data->buf)
-        return DATA_RLLC_ERR;
+        assert(data->buf);
+        if (!data->buf)
+            return DATA_RLLC_ERR;
 
-    #if (defined(DATA_HASH_PROTECT))
+        #if (defined(DATA_HASH_PROTECT))
 
-    data->hash_sum = HashMod(data->buf, new_capacity);
+            data->hash_sum = HashMod(data->buf, new_capacity);
 
-    #endif // defined(DATA_HASH_PROTECT)
+        #endif // defined(DATA_HASH_PROTECT)
 
     #endif // defined(DATA_CANARY_PROTECT)
 
@@ -372,6 +378,12 @@ static void FreeData (stk_data *data, int capacity) {
          data->r_canary = NULL;
 
     #endif // defined(DATA_CANARY_PROTECT)
+
+    #if (defined(DATA_HASH_PROTECT))
+
+        data->hash_sum = 0;
+
+    #endif // defined(DATA_HASH_PROTECT)
 }
 
 //-------------------------------------------------------------------------------------
@@ -397,15 +409,21 @@ void StackDump(const char  * const fname,
                   "             called from %s (%d) %s\n", stk, stk_name, "########", -1, err_file, err_line, err_func);
     fprintf(fout, "{\n");
 
+    fprintf(fout, "size     = %d (MX_STK = %d)\n", stk->size, MX_STK);
+    fprintf(fout, "capacity = %d\n", stk->capacity);
+
     #if (defined(STACK_CANARY_PROTECT))
 
-    fprintf(fout, "left  stack canary[%p] = %lu (%s)\n", &stk->l_canary, stk->l_canary, (stk->l_canary == LEFT_CHICK)  ? "ok" : "corrupted");
-    fprintf(fout, "right stack canary[%p] = %lu (%s)\n", &stk->r_canary, stk->r_canary, (stk->r_canary == RIGHT_CHICK) ? "ok" : "corrupted");
+        fprintf(fout, "left  stack canary[%p] = %lu (%s)\n", &stk->l_canary, stk->l_canary, (stk->l_canary == LEFT_CHICK)  ? "ok" : "corrupted");
+        fprintf(fout, "right stack canary[%p] = %lu (%s)\n", &stk->r_canary, stk->r_canary, (stk->r_canary == RIGHT_CHICK) ? "ok" : "corrupted");
 
     #endif // defined(STACK_CANARY_PROTECT)
 
-    fprintf(fout, "size     = %d (MX_STK = %d)\n", stk->size, MX_STK);
-    fprintf(fout, "capacity = %d\n", stk->capacity);
+    #if (defined(STACK_HASH_PROTECT))
+
+        fprintf(fout, "stack hash = %lu\n", *stk->hash_sum);
+
+    #endif // defined(STACK_HASH_PROTECT)
 
     err_msg = FormErrMsg(err_vector);
     if (*err_msg)
@@ -444,28 +462,47 @@ size_t StackErr(stack *stk, enum CALL_FROM call_from) {
 
     #if (defined(STACK_CANARY_PROTECT))
 
-    if (stk->l_canary != LEFT_CHICK )       errors |=  512;
-    if (stk->r_canary != RIGHT_CHICK)       errors |= 1024;
+        if (stk->l_canary != LEFT_CHICK )   errors |=  512;
+        if (stk->r_canary != RIGHT_CHICK)   errors |= 1024;
 
     #endif // defined(STACK_CANARY_PROTECT)
 
     #if (defined(DATA_HASH_PROTECT))
 
-        Hash_t new_hash = 0;
+        Hash_t new_data_hash = 0;
 
         if (stk->data.buf) {
 
-            new_hash = HashMod(stk->data.buf, stk->capacity * sizeof(Elem_t));
+            new_data_hash = HashMod(stk->data.buf, stk->capacity * sizeof(Elem_t));
+
         }
 
         if (call_from == F_BEGIN) {
-            if (new_hash != stk->data.hash_sum) errors |= 2048;
+            if (new_data_hash != stk->data.hash_sum) errors |= 2048;
         }
         else if (call_from == F_END) {
-            stk->data.hash_sum = new_hash;
+            stk->data.hash_sum = new_data_hash;
         }
 
     #endif // defined(DATA_HASH_PROTECT)
+
+    #if (defined(STACK_HASH_PROTECT))
+
+        Hash_t new_stack_hash = 0;
+
+        if (stk) {
+            new_stack_hash = HashMod(stk, sizeof(*stk));
+        }
+
+        if (call_from == F_BEGIN) {
+            if (*stk->hash_sum != new_stack_hash) errors |= 4096;
+
+        }
+        else if (call_from == F_END) {
+            *stk->hash_sum = new_stack_hash;
+        }
+
+    #endif // defined(STACK_HASH_PROTECT)
 
     return errors;
 }
@@ -523,9 +560,16 @@ static char * FormErrMsg(size_t err_vec) {
     #if (defined(DATA_HASH_PROTECT))
 
     if (err_vec & 2048)
-        ADD_ERR_MSG(err_msg, "data hashes dont match, sudden attack");
+        ADD_ERR_MSG(err_msg, "data hashes does not match, sudden attack");
 
     #endif // defined(DATA_HASH_PROTECT)
+
+    #if (defined(STACK_HASH_PROTECT))
+
+    if (err_vec & 4096)
+        ADD_ERR_MSG(err_msg, "stack hash does not match, sudden attack");
+
+    #endif // defined(STACK_HASH_PROTECT)
 
     strcat(err_msg, "\n");
 
