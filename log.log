@@ -1,50 +1,48 @@
-stack[0x7ffe8171fac0] stk from ######## (-1)
-             called from stack.cpp (166) StackDtor
+stack[0x7ffe67efd7a0] stk from ######## (-1)
+             called from stack.cpp (124) StackCtor
 {
-left  stack canary[0x7ffe8171fac0] = 12938577313804550314 (ok)
-right stack canary[0x7ffe8171faf0] = 12938577313804550314 (ok)
+left  stack canary[0x7ffe67efd7a0] = 12938577313804550314 (ok)
+right stack canary[0x7ffe67efd7d0] = 12938577313804550314 (ok)
 size     = 0 (MX_STK = 100)
-capacity = 10
-ERRORS: 
+capacity = -10
+ERRORS: buf null pointer, capacity <= 0, size >= capacity, left canary: data attacked from the left, right canary: data attacked from the right
 
-l_canary[0x55c7f6c0bf30] = 12938577313804550314 (ok)
-r_canary[0x55c7f6c0bf60] = 12938577313804550314 (ok)
-buf[0x55c7f6c0bf38]
+l_canary[(nil)] = 0 (ptr null)
+r_canary[(nil)] = 0 (ptr null)
+buf[(nil)]
 	{
-		 [   0] =          1 
-		 [   1] =          2 
-		 [   2] =          3 
-		 [   3] =          4 
-		 [   4] =          5 
-		 [   5] =          6 
-		 [   6] =   13634846 (POISON)
-		 [   7] =   13634846 (POISON)
-		 [   8] =   13634846 (POISON)
-		 [   9] =   13634846 (POISON)
+		buf null pointer, nothing to look at
 	}
 }
-stack[0x7ffe8171fac0] stk from ######## (-1)
-             called from stack.cpp (173) StackDtor
+stack[0x7ffdcae8fc80] stk from ######## (-1)
+             called from stack.cpp (124) StackCtor
 {
-left  stack canary[0x7ffe8171fac0] = 0 (corrupted)
-right stack canary[0x7ffe8171faf0] = 0 (corrupted)
+left  stack canary[0x7ffdcae8fc80] = 12938577313804550314 (ok)
+right stack canary[0x7ffdcae8fcb0] = 12938577313804550314 (ok)
 size     = 0 (MX_STK = 100)
-capacity = 10
-ERRORS: 
+capacity = -10
+ERRORS: buf null pointer, capacity <= 0, size >= capacity, left canary: data attacked from the left, right canary: data attacked from the right
 
-l_canary[0x55c7f6c0bf30] = 12938577313804550314 (ok)
-r_canary[0x55c7f6c0bf60] = 12938577313804550314 (ok)
-buf[0x55c7f6c0bf38]
+l_canary[(nil)] = 0 (ptr null)
+r_canary[(nil)] = 0 (ptr null)
+buf[(nil)]
 	{
-		 [   0] =          1 
-		 [   1] =          2 
-		 [   2] =          3 
-		 [   3] =          4 
-		 [   4] =          5 
-		 [   5] =          6 
-		 [   6] =   13634846 (POISON)
-		 [   7] =   13634846 (POISON)
-		 [   8] =   13634846 (POISON)
-		 [   9] =   13634846 (POISON)
+		buf null pointer, nothing to look at
+	}
+}
+stack[0x7fffb1e06f20] stk from ######## (-1)
+             called from stack.cpp (124) StackCtor
+{
+left  stack canary[0x7fffb1e06f20] = 12938577313804550314 (ok)
+right stack canary[0x7fffb1e06f50] = 12938577313804550314 (ok)
+size     = 0 (MX_STK = 100)
+capacity = -10
+ERRORS: buf null pointer, capacity <= 0, size >= capacity, left canary: data attacked from the left, right canary: data attacked from the right
+
+l_canary[(nil)] = 0 (ptr null)
+r_canary[(nil)] = 0 (ptr null)
+buf[(nil)]
+	{
+		buf null pointer, nothing to look at
 	}
 }

@@ -11,7 +11,7 @@ int main() {
 
     enum PUSH_OUT push_err = PUSH_NO_ERR;
 
-    StackCtor(&cat, 10);
+    StackCtor(&cat, -10);
 
     StackPush(&cat,  1);
     StackPush(&cat,  2);

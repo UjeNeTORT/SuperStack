@@ -59,6 +59,7 @@ add calloc checks in Stackcalloc
 #include <time.h>
 
 #include "colors.h"
+#include "my_hash.h"
 #include "stack.h"
 
 enum POISON_OUT {
@@ -88,7 +89,7 @@ static enum DATA_RLLC_OUT
 static enum POISON_OUT
               StackPoison        (stack *stk);
 
-static void   FreeData           (stk_data *data);
+static void   FreeData           (stk_data *data, int capacity);
 
 static char * FormErrMsg         (size_t err_vector);
 
@@ -165,15 +166,14 @@ enum DTOR_OUT StackDtor(stack *stk) {
 
     #if (defined(STACK_CANARY_PROTECT))
 
-    stk->l_canary = NULL;
-    stk->r_canary = NULL;
+    stk->l_canary = 0;
+    stk->r_canary = 0;
 
     #endif // defined(STACK_CANARY_PROTECT)
 
     stk->size     = -1;
     stk->capacity = -1;
-
-    FreeData(&stk->data);
+    FreeData(&stk->data, stk->capacity);
 
     stk = NULL; // didnt test
 
@@ -240,11 +240,20 @@ static enum DATA_CLLC_OUT StackDataCalloc (stk_data * data, int capacity) {
 
     assert (data);
 
-    if (!data)  return DATA_CLLC_ERR_SIDE;
+    if (!data)
+        return DATA_CLLC_ERR_SIDE;
 
     if (capacity <= 0) {
 
+        #if (defined(DATA_CANARY_PROTECT))
+
+            data->l_canary = NULL;
+            data->r_canary = NULL;
+
+        #endif // defined(DATA_CANARY_PROTECT)
+
         data->buf = NULL;
+
         return DATA_CLLC_ERR_SIDE;
     }
     else {
@@ -313,22 +322,25 @@ static enum DATA_RLLC_OUT StackDataRealloc (stk_data * data, int new_capacity) {
 }
 
 //-------------------------------------------------------------------------------------
-static void FreeData (stk_data *data) {
+static void FreeData (stk_data *data, int capacity) {
 
-    Elem_t * buf_ptr = data->buf;
+    for (size_t i = 0; i < capacity; i++) {
+        data->buf[i] = POISON; // DEAD MEMORY
+    }
 
-    while (buf_ptr < (void * ) data->r_canary)
-        *buf_ptr++ = POISON; //DEAD MEMORY
+    data->buf = NULL;
 
-   *data->l_canary = 0;
-   *data->r_canary = 0;
+    #if (defined(DATA_CANARY_PROTECT))
 
-    free(data->l_canary);
+        *data->l_canary = 0;
+        *data->r_canary = 0;
 
-    data->l_canary = NULL;
-    data->buf      = NULL;
-    data->r_canary = NULL;
+         free(data->l_canary);
 
+         data->l_canary = NULL;
+         data->r_canary = NULL;
+
+    #endif // defined(DATA_CANARY_PROTECT)
 }
 
 //-------------------------------------------------------------------------------------
@@ -369,7 +381,6 @@ void StackDump(const char  * const fname,
 
     fprintf(fout, "stack[%p] %s from %s (%d)\n"
                   "             called from %s (%d) %s\n", stk, stk_name, "########", -1, err_file, err_line, err_func);
-
     fprintf(fout, "{\n");
 
     #if (defined(STACK_CANARY_PROTECT))
@@ -409,8 +420,11 @@ size_t StackErr(const stack *stk) {
 
     #if (defined(DATA_CANARY_PROTECT))
 
-    if (*stk->data.l_canary != LEFT_CHICK ) errors |=  128;
-    if (*stk->data.r_canary != RIGHT_CHICK) errors |=  256;
+    if (!stk->data.l_canary || *stk->data.l_canary != LEFT_CHICK )
+                                            errors |=  128;
+
+    if (!stk->data.r_canary || *stk->data.r_canary != RIGHT_CHICK)
+                                            errors |=  256;
 
     #endif // defined(DATA_CANARY_PROTECT)
 
@@ -516,8 +530,8 @@ static void PrintStackDataDump(FILE *fout, const stack *stk) {
 
     #if (defined(DATA_CANARY_PROTECT))
 
-    fprintf(fout, "l_canary[%p] = %lu (%s)\n", stk->data.l_canary, *stk->data.l_canary, (*stk->data.l_canary == LEFT_CHICK)  ? "ok" : "corrupted");
-    fprintf(fout, "r_canary[%p] = %lu (%s)\n", stk->data.r_canary, *stk->data.r_canary, (*stk->data.r_canary == RIGHT_CHICK) ? "ok" : "corrupted");
+    fprintf(fout, "l_canary[%p] = %lu (%s)\n", stk->data.l_canary, (stk->data.l_canary) ? *stk->data.l_canary : 0, (stk->data.l_canary) ? ((*stk->data.l_canary == LEFT_CHICK)  ? "ok" : "corrupted") : "ptr null");
+    fprintf(fout, "r_canary[%p] = %lu (%s)\n", stk->data.r_canary, (stk->data.r_canary) ? *stk->data.r_canary : 0, (stk->data.r_canary) ? ((*stk->data.r_canary == RIGHT_CHICK) ? "ok" : "corrupted") : "ptr null");
 
     #endif // defined(DATA_CANARY_PROTECT)
 

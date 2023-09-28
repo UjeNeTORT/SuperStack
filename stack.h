@@ -3,11 +3,14 @@
 #include <limits.h>
 
 #define DEBUG_MODE
+
 #define STACK_CANARY_PROTECT
 #define DATA_CANARY_PROTECT
 
+#define HASH_PROTECT
+
 //-------------------------------------------------------------------------------------
-typedef int      Elem_t;
+typedef int    Elem_t;
 typedef size_t Canary_t;
 
 //-------------------------------------------------------------------------------------
