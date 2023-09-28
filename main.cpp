@@ -4,14 +4,12 @@
 
 #include "stack.h"
 
-
 int main() {
-
     stack cat = {};
 
     enum PUSH_OUT push_err = PUSH_NO_ERR;
 
-    StackCtor(&cat, -10);
+    StackCtor(&cat, 1);
 
     StackPush(&cat,  1);
     StackPush(&cat,  2);
@@ -37,6 +35,7 @@ int main() {
     enum POP_OUT pop_err = POP_NO_ERR;
 
     printf("%d\n", StackPop(&cat, &pop_err));
+    // cat.data.buf[0] = 1000;
     printf("%d\n", StackPop(&cat, &pop_err));
     printf("%d\n", StackPop(&cat, &pop_err));
     printf("%d\n", StackPop(&cat, &pop_err));
@@ -59,6 +58,7 @@ int main() {
         printf("%d\n", val);
     else
         printf("error in pop, please, launch in debug mode to see\n");
+
 
     StackDtor(&cat);
 

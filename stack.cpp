@@ -122,14 +122,14 @@ enum CTOR_OUT StackCtor(stack *stk, int capacity) {
 
     StackDataCalloc(&stk->data, capacity);
 
-    ASSERT_STACK(stk);
-    if (StackErr(stk))
+    ASSERT_STACK(stk, F_MID);
+    if (StackErr(stk, F_MID))
         return CTOR_ERR;
 
     StackPoison(stk);
 
-    ASSERT_STACK(stk);
-    if (StackErr(stk))
+    ASSERT_STACK(stk, F_MID);
+    if (StackErr(stk, F_MID))
         return CTOR_ERR;
 
     return CTOR_NO_ERR;
@@ -138,8 +138,8 @@ enum CTOR_OUT StackCtor(stack *stk, int capacity) {
 //-------------------------------------------------------------------------------------
 enum REALLC_OUT StackRealloc(stack *stk, int new_capacity) {
 
-    ASSERT_STACK(stk);
-    if (StackErr(stk))
+    ASSERT_STACK(stk, F_BEGIN);
+    if (StackErr(stk, F_BEGIN))
         return REALLC_ERR_SIDE;
 
     if (stk->capacity != new_capacity) {
@@ -150,8 +150,8 @@ enum REALLC_OUT StackRealloc(stack *stk, int new_capacity) {
 
     StackPoison(stk);
 
-    ASSERT_STACK(stk);
-    if (StackErr(stk))
+    ASSERT_STACK(stk, F_END);
+    if (StackErr(stk, F_END))
         return REALLC_ERR;
 
     return REALLC_NO_ERR;
@@ -159,9 +159,8 @@ enum REALLC_OUT StackRealloc(stack *stk, int new_capacity) {
 
 //-------------------------------------------------------------------------------------
 enum DTOR_OUT StackDtor(stack *stk) {
-
-    ASSERT_STACK(stk);
-    if (StackErr(stk))
+    ASSERT_STACK(stk, F_BEGIN);
+    if (StackErr(stk, F_BEGIN))
         return DTOR_ERR_SIDE;
 
     #if (defined(STACK_CANARY_PROTECT))
@@ -171,9 +170,10 @@ enum DTOR_OUT StackDtor(stack *stk) {
 
     #endif // defined(STACK_CANARY_PROTECT)
 
+    FreeData(&stk->data, stk->capacity);
+
     stk->size     = -1;
     stk->capacity = -1;
-    FreeData(&stk->data, stk->capacity);
 
     stk = NULL; // didnt test
 
@@ -183,22 +183,20 @@ enum DTOR_OUT StackDtor(stack *stk) {
 //-------------------------------------------------------------------------------------
 enum PUSH_OUT StackPush(stack *stk, Elem_t value) {
 
-    ASSERT_STACK(stk);
-    if (StackErr(stk))
+    ASSERT_STACK(stk, F_BEGIN);
+    if (StackErr(stk, F_BEGIN))
         return PUSH_ERR_SIDE;
+
+
+    int new_capacity = GetNewCapacity(stk);
+    if (stk->capacity != new_capacity)
+        StackRealloc(stk, new_capacity);
 
     stk->data.buf[stk->size] = value;
     stk->size++;
 
-    int new_capacity = GetNewCapacity(stk);
-
-    if (stk->capacity != new_capacity) {
-        StackRealloc(stk, new_capacity);
-
-    }
-
-    ASSERT_STACK(stk);
-    if (StackErr(stk))
+    ASSERT_STACK(stk, F_END);
+    if (StackErr(stk, F_END))
         return PUSH_ERR;
 
     return PUSH_NO_ERR;
@@ -207,18 +205,9 @@ enum PUSH_OUT StackPush(stack *stk, Elem_t value) {
 //-------------------------------------------------------------------------------------
 Elem_t StackPop(stack *stk, enum POP_OUT *err) {
 
-    ASSERT_STACK(stk);
-    if (StackErr(stk))
+    ASSERT_STACK(stk, F_BEGIN);
+    if (StackErr(stk, F_BEGIN))
         *err = POP_ERR_SIDE;
-
-    stk->size--;
-    Elem_t ret_value = stk->data.buf[stk->size];
-
-    ASSERT_STACK(stk);
-    if (StackErr(stk))
-        *err = POP_ERR;
-    else
-        *err = POP_NO_ERR;
 
     int new_capacity = GetNewCapacity(stk);
 
@@ -226,8 +215,20 @@ Elem_t StackPop(stack *stk, enum POP_OUT *err) {
         StackRealloc(stk, new_capacity);
     }
 
-    ASSERT_STACK(stk);
-    if (StackErr(stk))
+    stk->size--;
+
+    Elem_t ret_value = stk->data.buf[stk->size];
+
+    ASSERT_STACK(stk, F_MID);
+    if (StackErr(stk, F_MID))
+        *err = POP_ERR;
+    else
+        *err = POP_NO_ERR;
+
+    StackPoison(stk);
+
+    ASSERT_STACK(stk, F_END);
+    if (StackErr(stk, F_END))
         *err = POP_ERR;
     else
         *err = POP_NO_ERR;
@@ -254,6 +255,12 @@ static enum DATA_CLLC_OUT StackDataCalloc (stk_data * data, int capacity) {
 
         data->buf = NULL;
 
+        #if (defined(DATA_HASH_PROTECT))
+
+        data->hash_sum = 0;
+
+        #endif // defined(DATA_HASH_PROTECT)
+
         return DATA_CLLC_ERR_SIDE;
     }
     else {
@@ -273,14 +280,27 @@ static enum DATA_CLLC_OUT StackDataCalloc (stk_data * data, int capacity) {
         data->r_canary = (Canary_t * ) (data->buf + capacity);
        *data->r_canary = RIGHT_CHICK;
 
+        #if (defined(DATA_HASH_PROTECT))
+
+        data->hash_sum = HashMod(data->l_canary, capacity * sizeof(Elem_t) + 2 * sizeof(Canary_t));
+
+        #endif // defined(DATA_HASH_PROTECT)
+
         #else
 
         data->buf = (Elem_t *) calloc(capacity, sizeof(Elem_t));
+
+        #if (defined(DATA_HASH_PROTECT))
+
+        data->hash_sum = HashMod(data->buf, capacity * sizeof(Elem_t));
+
+        #endif // defined(DATA_HASH_PROTECT)
 
         if (!data->buf)
             return DATA_CLLC_ERR;
 
         #endif // defined(DATA_CANARY_PROTECT)
+
     }
 
     return DATA_CLLC_NO_ERR;
@@ -308,13 +328,25 @@ static enum DATA_RLLC_OUT StackDataRealloc (stk_data * data, int new_capacity) {
     data->r_canary = (Canary_t * ) (data->buf + new_capacity);
    *data->r_canary = RIGHT_CHICK;
 
+    #if (defined(DATA_HASH_PROTECT))
+
+    data->hash_sum = HashMod(data->l_canary, new_capacity * sizeof(Elem_t) + 2 * sizeof(Canary_t));
+
+    #endif // defined(DATA_HASH_PROTECT)
+
     #else
 
-    data->buf = (Elem_t * ) realloc(data->buf, new_capacity);
+    data->buf = (Elem_t * ) realloc(data->buf, new_capacity * sizeof(Elem_t));
 
     assert(data->buf);
     if (!data->buf)
         return DATA_RLLC_ERR;
+
+    #if (defined(DATA_HASH_PROTECT))
+
+    data->hash_sum = HashMod(data->buf, new_capacity);
+
+    #endif // defined(DATA_HASH_PROTECT)
 
     #endif // defined(DATA_CANARY_PROTECT)
 
@@ -344,23 +376,6 @@ static void FreeData (stk_data *data, int capacity) {
 }
 
 //-------------------------------------------------------------------------------------
-/*
-what are the possibilities?
-
-o MAKE BUFFER TO WHICH WE PUT STRINGS "*[0] = 10", ...
-  AND MAKE MACROS-WRAPPER to print info like "data [0x001AD0C] {<text_from_buffer>}"
-  + easy to do
-  + training with macros
-  - mamory consuming
-
-o MAKE SEQUENCE OF FPRINTF
-  + very easy to do
-  - hard to change if i need it
-  - big code
-  - hard to debug
-  - i dont work with macros (but i want to do macros as i dont feel confident while working with it)
-
-*/
 void StackDump(const char  * const fname,
                const stack *       stk,
                size_t              err_vector,
@@ -406,7 +421,7 @@ void StackDump(const char  * const fname,
 
 //-------------------------------------------------------------------------------------
 //verificator
-size_t StackErr(const stack *stk) {
+size_t StackErr(stack *stk, enum CALL_FROM call_from) {
 
     size_t errors = 0;
 
@@ -414,7 +429,7 @@ size_t StackErr(const stack *stk) {
     if (!stk->data.buf)                     errors |=    2;
     if (stk->size < 0)                      errors |=    4;
     if (stk->capacity <= 0)                 errors |=    8;
-    if (stk->size >= stk->capacity)         errors |=   16;
+    if (stk->size > stk->capacity)          errors |=   16;
     if (stk->capacity > MX_STK)             errors |=   32;
     if (stk->init_capacity > stk->capacity) errors |=   64;
 
@@ -434,6 +449,31 @@ size_t StackErr(const stack *stk) {
     if (stk->r_canary != RIGHT_CHICK)       errors |= 1024;
 
     #endif // defined(STACK_CANARY_PROTECT)
+
+    #if (defined(DATA_HASH_PROTECT))
+
+        Hash_t new_hash = 0;
+
+        #if (defined(DATA_CANARY_PROTECT))
+
+            if (stk->data.l_canary)
+                new_hash = HashMod(stk->data.l_canary, stk->capacity * sizeof(Elem_t) + 2 * sizeof(Canary_t));
+
+        #else
+
+            if (stk->data.buf)
+                Hash_t new_hash = HashMod(stk->data.buf, stk->capacity * sizeof(Elem_t));
+
+        #endif // defined(DATA_CANARY_PROTECT)
+
+        if (call_from == F_BEGIN) {
+            if (new_hash != stk->data.hash_sum) errors |= 2048;
+        }
+        else if (call_from == F_END) {
+            stk->data.hash_sum = new_hash;
+        }
+
+    #endif // defined(DATA_HASH_PROTECT)
 
     return errors;
 }
@@ -488,6 +528,13 @@ static char * FormErrMsg(size_t err_vec) {
 
     #endif // defined(STACK_CANARY_PROTECT)
 
+    #if (defined(DATA_HASH_PROTECT))
+
+    if (err_vec & 2048)
+        ADD_ERR_MSG(err_msg, "data hashes dont match, sudden attack");
+
+    #endif // defined(DATA_HASH_PROTECT)
+
     strcat(err_msg, "\n");
 
     return err_msg;
@@ -496,37 +543,29 @@ static char * FormErrMsg(size_t err_vec) {
 //-------------------------------------------------------------------------------------
 static int GetNewCapacity(stack *stk) {
 
-    if (stk->size <= (int) stk->capacity / 4 + 1 && stk->capacity > stk->init_capacity)
-        return stk->capacity / 2;
 
-    if (stk->size >= (int) stk->capacity * 3 / 4)
+    if (stk->size + 1 >= (int) stk->capacity * 3 / 4)
         return stk->capacity * 2;
+
+    if (stk->size - 1 <= (int) stk->capacity / 4 + 1 && stk->capacity > stk->init_capacity)
+        return stk->capacity / 2;
 
     return stk->capacity;
 }
 
 //-------------------------------------------------------------------------------------
-/*
-returns pointer to string which contents fully prepared string with every element of data
-
-
-string which we return (1) can be contained in separate dynamically allocated reusable buffer
-                       (2) can be compilation-time constant
-        we use   option 2 because if we call StackDump, program stops and this means that we need to call GetStackDataDump only once
-        usage of option 1 would be overengineering
-
-if size of buffer <= 0 we return data[0x00000] { size < 0 nothing to look at}
-if data == NULL        we return data[0x00000] { nothing to look at }
-if data != NULL        we print  data[address] { *[0] = 10\n *[1] = 1\n and so on and so forth}
-
-
-PROBLEM: how can we use format-strings outside of fprintf (to use strcat (..., "[%d] = %d\n", <%-values>))?
- */
+// returns pointer to string which contents fully prepared string with every element of data
 static void PrintStackDataDump(FILE *fout, const stack *stk) {
 
     /* here we dont use ASSERT_STACK because we use this func in debug and this means that stack is already not ok */
     assert (stk);
     assert (fout);
+
+    #if (defined(DATA_HASH_PROTECT))
+
+    fprintf(fout, "hash_sum = %lu\n", stk->data.hash_sum);
+
+    #endif // defined(DATA_HASH_PROTECT)
 
     #if (defined(DATA_CANARY_PROTECT))
 
@@ -543,6 +582,9 @@ static void PrintStackDataDump(FILE *fout, const stack *stk) {
     }
     else if (stk->capacity <= 0) {
         fprintf(fout, "\t\tstack capacity is 0 or less, cant print it\n");
+    }
+    else if (stk->capacity > MX_STK) {
+        fprintf(fout, "\t\tstack capacity is bigger than allowed (%d) memory allocation did not happen\n", MX_STK);
     }
     else {
 
@@ -561,8 +603,8 @@ static void PrintStackDataDump(FILE *fout, const stack *stk) {
 
 static enum POISON_OUT StackPoison(stack *stk) {
 
-    ASSERT_STACK(stk);
-    if (StackErr(stk))
+    ASSERT_STACK(stk, F_BEGIN);
+    if (StackErr(stk, F_BEGIN))
         return POISON_ERR_SIDE;
 
     int cnt = stk->size;
@@ -570,8 +612,8 @@ static enum POISON_OUT StackPoison(stack *stk) {
     while (cnt < stk->capacity)
         stk->data.buf[cnt++] = POISON;
 
-    ASSERT_STACK(stk);
-    if (StackErr(stk))
+    ASSERT_STACK(stk, F_END);
+    if (StackErr(stk, F_END))
         return POISON_ERR;
 
     return POISON_NO_ERR;

@@ -2,12 +2,15 @@
 
 #include <limits.h>
 
+#include "my_hash.h"
+
 #define DEBUG_MODE
 
 #define STACK_CANARY_PROTECT
-#define DATA_CANARY_PROTECT
+// #define DATA_CANARY_PROTECT
 
-#define HASH_PROTECT
+#define STACK_HASH_PROTECT
+#define DATA_HASH_PROTECT
 
 //-------------------------------------------------------------------------------------
 typedef int    Elem_t;
@@ -21,9 +24,9 @@ typedef size_t Canary_t;
     #define ADD_ERR_MSG(prev, msg) strcat((*(prev)) ? strcat((prev), ", ") : (prev), (msg))
 
     // assume that err_vector declared before
-    #define ASSERT_STACK(stk)                                \
+    #define ASSERT_STACK(stk, call_from)                     \
     {                                                        \
-        err_vector = StackErr(stk);                          \
+        err_vector = StackErr(stk, call_from);               \
         if (err_vector) {                                    \
             STACK_DUMP(LOG_FILE, stk, err_vector);           \
             fprintf(stderr, "Stack corrupted. ABORTED\n");   \
@@ -34,7 +37,7 @@ typedef size_t Canary_t;
 #else
     #define STACK_DUMP(fname, stk, err_vector) ;
     #define ADD_ERR_MSG(prev, msg)             ;
-    #define ASSERT_STACK(stk)                  ;
+    #define ASSERT_STACK(stk, call_from)       ;
 
 #endif // defined(DEBUG_MODE)
 
@@ -65,7 +68,14 @@ struct stk_data {
     Canary_t *r_canary;
 
     #endif // defined(DATA_CANARY_PROTECT)
+
+    #if (defined(DATA_HASH_PROTECT))
+
+    Hash_t    hash_sum;
+
+    #endif // defined(DATA_HASH_PROTECT)
 };
+
 //-------------------------------------------------------------------------------------
 struct stack {
 
@@ -119,6 +129,12 @@ enum POP_OUT {
     POP_ERR      =  1
 };
 
+enum CALL_FROM {
+    F_BEGIN = -1,
+    F_MID   =  0,
+    F_END   =  1
+};
+
 //-------------------------------------------------------------------------------------
 enum CTOR_OUT
 StackCtor(stack *stk,
@@ -153,4 +169,4 @@ StackDump(const char  * const fname,
           const char  * const err_func);
 
 //-------------------------------------------------------------------------------------
-size_t StackErr(const stack *stk);
+size_t StackErr(stack *stk, enum CALL_FROM call_from);

@@ -1,48 +1,84 @@
-stack[0x7ffe67efd7a0] stk from ######## (-1)
-             called from stack.cpp (124) StackCtor
+stack[0x7ffdc2a66090] stk from ######## (-1)
+             called from stack.cpp (606) StackPoison
 {
-left  stack canary[0x7ffe67efd7a0] = 12938577313804550314 (ok)
-right stack canary[0x7ffe67efd7d0] = 12938577313804550314 (ok)
-size     = 0 (MX_STK = 100)
-capacity = -10
-ERRORS: buf null pointer, capacity <= 0, size >= capacity, left canary: data attacked from the left, right canary: data attacked from the right
+left  stack canary[0x7ffdc2a66090] = 12938577313804550314 (ok)
+right stack canary[0x7ffdc2a660b8] = 12938577313804550314 (ok)
+size     = 6 (MX_STK = 100)
+capacity = 20
+ERRORS: data hashes dont match, sudden attack
 
-l_canary[(nil)] = 0 (ptr null)
-r_canary[(nil)] = 0 (ptr null)
-buf[(nil)]
+hash_sum = 5
+buf[0x563ec8a4ef30]
 	{
-		buf null pointer, nothing to look at
+		*[   0] =          1
+		*[   1] =          2
+		*[   2] =          3
+		*[   3] =          4
+		*[   4] =          5
+		*[   5] =          6
+		 [   6] =   13634846 (POISON)
+		 [   7] =   13634846 (POISON)
+		 [   8] =   13634846 (POISON)
+		 [   9] =   13634846 (POISON)
+		 [  10] =     131249 
+		 [  11] =          0 
+		 [  12] =          0 
+		 [  13] =          0 
+		 [  14] =          0 
+		 [  15] =          0 
+		 [  16] =          0 
+		 [  17] =          0 
+		 [  18] =          0 
+		 [  19] =          0 
 	}
 }
-stack[0x7ffdcae8fc80] stk from ######## (-1)
-             called from stack.cpp (124) StackCtor
+stack[0x7ffdbb10fb10] stk from ######## (-1)
+             called from stack.cpp (606) StackPoison
 {
-left  stack canary[0x7ffdcae8fc80] = 12938577313804550314 (ok)
-right stack canary[0x7ffdcae8fcb0] = 12938577313804550314 (ok)
-size     = 0 (MX_STK = 100)
-capacity = -10
-ERRORS: buf null pointer, capacity <= 0, size >= capacity, left canary: data attacked from the left, right canary: data attacked from the right
+left  stack canary[0x7ffdbb10fb10] = 12938577313804550314 (ok)
+right stack canary[0x7ffdbb10fb38] = 12938577313804550314 (ok)
+size     = 6 (MX_STK = 100)
+capacity = 20
+ERRORS: data hashes dont match, sudden attack
 
-l_canary[(nil)] = 0 (ptr null)
-r_canary[(nil)] = 0 (ptr null)
-buf[(nil)]
+hash_sum = 5
+buf[0x5638e6c24f30]
 	{
-		buf null pointer, nothing to look at
+		*[   0] =          1
+		*[   1] =          2
+		*[   2] =          3
+		*[   3] =          4
+		*[   4] =          5
+		*[   5] =          6
+		 [   6] =   13634846 (POISON)
+		 [   7] =   13634846 (POISON)
+		 [   8] =   13634846 (POISON)
+		 [   9] =   13634846 (POISON)
+		 [  10] =     131249 
+		 [  11] =          0 
+		 [  12] =          0 
+		 [  13] =          0 
+		 [  14] =          0 
+		 [  15] =          0 
+		 [  16] =          0 
+		 [  17] =          0 
+		 [  18] =          0 
+		 [  19] =          0 
 	}
 }
-stack[0x7fffb1e06f20] stk from ######## (-1)
-             called from stack.cpp (124) StackCtor
+stack[0x7ffc1d754190] stk from ######## (-1)
+             called from stack.cpp (606) StackPoison
 {
-left  stack canary[0x7fffb1e06f20] = 12938577313804550314 (ok)
-right stack canary[0x7fffb1e06f50] = 12938577313804550314 (ok)
+left  stack canary[0x7ffc1d754190] = 12938577313804550314 (ok)
+right stack canary[0x7ffc1d7541b8] = 12938577313804550314 (ok)
 size     = 0 (MX_STK = 100)
-capacity = -10
-ERRORS: buf null pointer, capacity <= 0, size >= capacity, left canary: data attacked from the left, right canary: data attacked from the right
+capacity = 2
+ERRORS: data hashes dont match, sudden attack
 
-l_canary[(nil)] = 0 (ptr null)
-r_canary[(nil)] = 0 (ptr null)
-buf[(nil)]
+hash_sum = 60
+buf[0x56062785ef30]
 	{
-		buf null pointer, nothing to look at
+		 [   0] =   13634846 (POISON)
+		 [   1] =          0 
 	}
 }
