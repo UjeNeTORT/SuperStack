@@ -183,7 +183,6 @@ enum DTOR_OUT StackDtor(stack *stk, stk_debug_info debug_info) {
     stk->capacity = -1;
 
     stk = NULL;
-
     return DTOR_DESTR;
 }
 
@@ -215,15 +214,12 @@ Elem_t StackPop(stack *stk, enum POP_OUT *err, stk_debug_info debug_info) {
     if (StackErr(stk, F_BEGIN))
         *err = POP_ERR_SIDE;
 
-    int new_capacity = GetNewCapacity(stk, debug_info);
+    stk->size--;
 
+    int new_capacity = GetNewCapacity(stk, debug_info);
     if (stk->capacity != new_capacity) {
         StackRealloc(stk, new_capacity, debug_info);
     }
-
-    stk->size--;
-
-    Elem_t ret_value = stk->data.buf[stk->size];
 
     ASSERT_STACK(stk, F_MID, debug_info);
     if (StackErr(stk, F_MID))
@@ -231,15 +227,13 @@ Elem_t StackPop(stack *stk, enum POP_OUT *err, stk_debug_info debug_info) {
     else
         *err = POP_NO_ERR;
 
-    StackPoison(stk, debug_info);
-
     ASSERT_STACK(stk, F_END, debug_info);
     if (StackErr(stk, F_END))
         *err = POP_ERR;
     else
         *err = POP_NO_ERR;
 
-    return ret_value;
+    return stk->data.buf[stk->size];
 }
 
 //-------------------------------------------------------------------------------------
@@ -361,10 +355,6 @@ static enum DATA_RLLC_OUT StackDataRealloc (stk_data * data, int new_capacity) {
 
 //-------------------------------------------------------------------------------------
 static void FreeData (stk_data *data, int capacity) {
-
-    assert(data); // TODO
-    if (!data)
-        return;
 
     for (size_t i = 0; i < capacity; i++) {
         data->buf[i] = POISON; // DEAD MEMORY

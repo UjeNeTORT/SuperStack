@@ -3,7 +3,7 @@
 
 #include "my_hash.h"
 
-const size_t DENOMINATOR = 1000000007; // prostoye
+const size_t DENOMINATOR = 3; // prostoye
 
 Hash_t HashMod(const void * val, int size) {
 

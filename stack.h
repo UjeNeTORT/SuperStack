@@ -1,4 +1,6 @@
 //  c++ library is called "stack", "not stack.h", so no naming conflicts
+#ifndef STACK_H
+#define STACK_H
 
 #include <limits.h>
 
@@ -258,3 +260,5 @@ size_t StackErr(stack *stk, enum CALL_FROM call_from);
  * anscillary func for macros-wrapper, returns debug info about stack
 */
 stk_debug_info UpdDebugInfo (const char *stk_name, const char *filename, int line);
+
+#endif // STACK_H
