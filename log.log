@@ -1,18 +1,18 @@
-stack[0x7ffe40f2eb40] stk from ######## (-1)
-             called from stack.cpp (169) StackDtor
+stack[0x7ffe854e1340] cat from main.cpp (12)
+             called from stack.cpp (131) StackCtor
 {
-size     = -1 (MX_STK = 100)
-capacity = -1
-left  stack canary[0x7ffe40f2eb40] = 0 (corrupted)
-right stack canary[0x7ffe40f2eb80] = 0 (corrupted)
-stack hash = 900120640
-ERRORS: buf null pointer, size < 0, capacity <= 0, init capacity is bigger than capacity, left canary: data attacked from the left, right canary: data attacked from the right, left canary: stack attacked from the left, right canary: stack attacked from the right, stack hash does not match, sudden attack
+size     = 0 (MX_STK = 100)
+capacity = 1000
+left  stack canary[0x7ffe854e1340] = 12938577313804550314 (ok)
+right stack canary[0x7ffe854e1380] = 12938577313804550314 (ok)
+stack hash = 0
+ERRORS: capacity bigger than max stack size
 
-hash_sum = 0
-l_canary[(nil)] = 0 (ptr null)
-r_canary[(nil)] = 0 (ptr null)
-buf[(nil)]
+hash_sum = 235888513
+l_canary[0x55bac0098f50] = 12938577313804550314 (ok)
+r_canary[0x55bac0099ef8] = 12938577313804550314 (ok)
+buf[0x55bac0098f58]
 	{
-		buf null pointer, nothing to look at
+		stack capacity is bigger than allowed (100) memory allocation did not happen
 	}
 }

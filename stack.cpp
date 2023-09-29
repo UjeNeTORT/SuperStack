@@ -87,7 +87,7 @@ static enum DATA_RLLC_OUT
               StackDataRealloc   (stk_data * data, int new_capacity);
 
 static enum POISON_OUT
-              StackPoison        (stack *stk);
+              StackPoison        (stack *stk, stk_debug_info debuf_info);
 
 static void   FreeData           (stk_data *data, int capacity);
 
@@ -95,14 +95,14 @@ static char * FormErrMsg         (size_t err_vector);
 
 static void   PrintStackDataDump (FILE *fout, const stack *stk);
 
-static int    GetNewCapacity     (stack *stk);
+static int    GetNewCapacity     (stack *stk, stk_debug_info debuf_info);
 
 // in order not to create another one every time i need it
 unsigned err_vector = 0;
 char * err_msg = (char *) calloc(MAX_ERR_MSG_STRING, sizeof(char *));
 
 //-------------------------------------------------------------------------------------
-enum CTOR_OUT StackCtor(stack *stk, int capacity) {
+enum CTOR_OUT StackCtor(stack *stk, int capacity, stk_debug_info debug_info) {
 
     //dont use StackErr because we are in constructor and no way it breaks
     assert(stk);
@@ -128,13 +128,13 @@ enum CTOR_OUT StackCtor(stack *stk, int capacity) {
 
     StackDataCalloc(&stk->data, capacity);
 
-    ASSERT_STACK(stk, F_MID);
+    ASSERT_STACK(stk, F_MID, debug_info);
     if (StackErr(stk, F_MID))
         return CTOR_ERR;
 
-    StackPoison(stk);
+    StackPoison(stk, debug_info);
 
-    ASSERT_STACK(stk, F_END);
+    ASSERT_STACK(stk, F_END, debug_info);
     if (StackErr(stk, F_END))
         return CTOR_ERR;
 
@@ -142,9 +142,9 @@ enum CTOR_OUT StackCtor(stack *stk, int capacity) {
 }
 
 //-------------------------------------------------------------------------------------
-enum REALLC_OUT StackRealloc(stack *stk, int new_capacity) {
+enum REALLC_OUT StackRealloc(stack *stk, int new_capacity, stk_debug_info debug_info) {
 
-    ASSERT_STACK(stk, F_MID);
+    ASSERT_STACK(stk, F_MID, debug_info);
     if (StackErr(stk, F_MID))
         return REALLC_ERR_SIDE;
 
@@ -154,9 +154,9 @@ enum REALLC_OUT StackRealloc(stack *stk, int new_capacity) {
         stk->capacity = new_capacity;
     }
 
-    StackPoison(stk);
+    StackPoison(stk, debug_info);
 
-    ASSERT_STACK(stk, F_END);
+    ASSERT_STACK(stk, F_END, debug_info);
     if (StackErr(stk, F_END))
         return REALLC_ERR;
 
@@ -164,9 +164,9 @@ enum REALLC_OUT StackRealloc(stack *stk, int new_capacity) {
 }
 
 //-------------------------------------------------------------------------------------
-enum DTOR_OUT StackDtor(stack *stk) {
+enum DTOR_OUT StackDtor(stack *stk, stk_debug_info debug_info) {
 
-    ASSERT_STACK(stk, F_BEGIN);
+    ASSERT_STACK(stk, F_BEGIN, debug_info);
     if (StackErr(stk, F_BEGIN))
         return DTOR_ERR_SIDE;
 
@@ -188,20 +188,20 @@ enum DTOR_OUT StackDtor(stack *stk) {
 }
 
 //-------------------------------------------------------------------------------------
-enum PUSH_OUT StackPush(stack *stk, Elem_t value) {
+enum PUSH_OUT StackPush(stack *stk, Elem_t value, stk_debug_info debug_info) {
 
-    ASSERT_STACK(stk, F_BEGIN);
+    ASSERT_STACK(stk, F_BEGIN, debug_info);
     if (StackErr(stk, F_BEGIN))
         return PUSH_ERR_SIDE;
 
-    int new_capacity = GetNewCapacity(stk);
+    int new_capacity = GetNewCapacity(stk, debug_info);
     if (stk->capacity != new_capacity)
-        StackRealloc(stk, new_capacity);
+        StackRealloc(stk, new_capacity, debug_info);
 
     stk->data.buf[stk->size] = value;
     stk->size++;
 
-    ASSERT_STACK(stk, F_END);
+    ASSERT_STACK(stk, F_END, debug_info);
     if (StackErr(stk, F_END))
         return PUSH_ERR;
 
@@ -209,31 +209,31 @@ enum PUSH_OUT StackPush(stack *stk, Elem_t value) {
 }
 
 //-------------------------------------------------------------------------------------
-Elem_t StackPop(stack *stk, enum POP_OUT *err) {
+Elem_t StackPop(stack *stk, enum POP_OUT *err, stk_debug_info debug_info) {
 
-    ASSERT_STACK(stk, F_BEGIN);
+    ASSERT_STACK(stk, F_BEGIN, debug_info);
     if (StackErr(stk, F_BEGIN))
         *err = POP_ERR_SIDE;
 
-    int new_capacity = GetNewCapacity(stk);
+    int new_capacity = GetNewCapacity(stk, debug_info);
 
     if (stk->capacity != new_capacity) {
-        StackRealloc(stk, new_capacity);
+        StackRealloc(stk, new_capacity, debug_info);
     }
 
     stk->size--;
 
     Elem_t ret_value = stk->data.buf[stk->size];
 
-    ASSERT_STACK(stk, F_MID);
+    ASSERT_STACK(stk, F_MID, debug_info);
     if (StackErr(stk, F_MID))
         *err = POP_ERR;
     else
         *err = POP_NO_ERR;
 
-    StackPoison(stk);
+    StackPoison(stk, debug_info);
 
-    ASSERT_STACK(stk, F_END);
+    ASSERT_STACK(stk, F_END, debug_info);
     if (StackErr(stk, F_END))
         *err = POP_ERR;
     else
@@ -362,6 +362,10 @@ static enum DATA_RLLC_OUT StackDataRealloc (stk_data * data, int new_capacity) {
 //-------------------------------------------------------------------------------------
 static void FreeData (stk_data *data, int capacity) {
 
+    assert(data); // TODO
+    if (!data)
+        return;
+
     for (size_t i = 0; i < capacity; i++) {
         data->buf[i] = POISON; // DEAD MEMORY
     }
@@ -394,7 +398,8 @@ void StackDump(const char  * const fname,
                const char  *       stk_name,
                const char  * const err_file,
                int                 err_line,
-               const char  * const err_func) {
+               const char  * const err_func,
+               stk_debug_info      debug_info) {
 
     assert (stk);
     assert (fname);
@@ -407,7 +412,7 @@ void StackDump(const char  * const fname,
     assert (fout);
 
     fprintf(fout, "stack[%p] %s from %s (%d)\n"
-                  "             called from %s (%d) %s\n", stk, stk_name, "########", -1, err_file, err_line, err_func);
+                  "             called from %s (%d) %s\n", stk, debug_info.stk_name, debug_info.filename, debug_info.line, err_file, err_line, err_func);
     fprintf(fout, "{\n");
 
     fprintf(fout, "size     = %d (MX_STK = %d)\n", stk->size, MX_STK);
@@ -578,13 +583,17 @@ static char * FormErrMsg(size_t err_vec) {
 }
 
 //-------------------------------------------------------------------------------------
-static int GetNewCapacity(stack *stk) {
+static int GetNewCapacity(stack *stk, stk_debug_info debug_info) {
+
+    ASSERT_STACK(stk, F_MID, debug_info);
 
     if (stk->size + 1 >= (int) stk->capacity * 3 / 4)
         return stk->capacity * 2;
 
     if (stk->size - 1 <= (int) stk->capacity / 4 + 1 && stk->capacity > stk->init_capacity)
         return stk->capacity / 2;
+
+    ASSERT_STACK(stk, F_MID, debug_info);
 
     return stk->capacity;
 }
@@ -639,9 +648,10 @@ static void PrintStackDataDump(FILE *fout, const stack *stk) {
     fprintf(fout, "\t}\n");
 }
 
-static enum POISON_OUT StackPoison(stack *stk) {
+//-------------------------------------------------------------------------------------
+static enum POISON_OUT StackPoison(stack *stk, stk_debug_info debug_info) {
 
-    ASSERT_STACK(stk, F_MID);
+    ASSERT_STACK(stk, F_MID, debug_info);
     if (StackErr(stk, F_MID))
         return POISON_ERR_SIDE;
 
@@ -650,9 +660,22 @@ static enum POISON_OUT StackPoison(stack *stk) {
     while (cnt < stk->capacity)
         stk->data.buf[cnt++] = POISON;
 
-    ASSERT_STACK(stk, F_MID);
+    ASSERT_STACK(stk, F_MID, debug_info);
     if (StackErr(stk, F_MID))
         return POISON_ERR;
 
     return POISON_NO_ERR;
+}
+
+//-------------------------------------------------------------------------------------
+stk_debug_info UpdDebugInfo(const char *stk_name, const char *filename, int line) {
+
+    stk_debug_info debug_info = {};
+
+    debug_info.stk_name = stk_name;
+    debug_info.filename = filename;
+    debug_info.line     = line;
+
+    return debug_info;
+
 }

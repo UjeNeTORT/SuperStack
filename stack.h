@@ -20,26 +20,28 @@ typedef size_t Canary_t;
 //-------------------------------------------------------------------------------------
 #if (defined(DEBUG_MODE))
 
-    #define STACK_DUMP(fname, stk, err_vector) StackDump((fname), (stk), (err_vector), (#stk), __FILE__, __LINE__, __FUNCTION__)
+    #define STACK_DUMP(fname, stk, err_vector, debg_inf) StackDump((fname), (stk), (err_vector), (#stk), __FILE__, __LINE__, __FUNCTION__, debg_inf)
 
     #define ADD_ERR_MSG(prev, msg) strcat((*(prev)) ? strcat((prev), ", ") : (prev), (msg))
 
     // assume that err_vector declared before
-    #define ASSERT_STACK(stk, call_from)                     \
+    #define ASSERT_STACK(stk, call_from, debg_inf)           \
     {                                                        \
         err_vector = StackErr(stk, call_from);               \
         if (err_vector) {                                    \
-            STACK_DUMP(LOG_FILE, stk, err_vector);           \
+            STACK_DUMP(LOG_FILE, stk, err_vector, debg_inf); \
             fprintf(stderr, "Stack corrupted. ABORTED\n");   \
             abort();                                         \
         }                                                    \
     }
 
+    #define DEBUG_INFO(stk) (UpdDebugInfo((#stk), __FILE__, __LINE__))
+
 #else
     #define STACK_DUMP(fname, stk, err_vector) ;
     #define ADD_ERR_MSG(prev, msg)             ;
     #define ASSERT_STACK(stk, call_from)       ;
-
+    #define DEBUG_INFO(stk)                    {NULL, NULL, -1}
 #endif // defined(DEBUG_MODE)
 
 //-------------------------------------------------------------------------------------
@@ -101,6 +103,14 @@ struct stack {
     #endif // defined(STACK_CANARY_PROTECT)
 };
 
+struct stk_debug_info {
+
+    const char * stk_name;
+    const char * filename;
+    int line;
+
+};
+
 //-------------------------------------------------------------------------------------
 enum CTOR_OUT {
     CTOR_NULL_STK = -1, // if function received already corrupted stack
@@ -147,6 +157,7 @@ enum CALL_FROM {
 /**
  * @param [out] stk stack-variable, not valid
  * @param [in] capacity required stack capacity
+ * @param [in] debug_info contains info about place from which we got into function
  *
  * Stack Constructor: allocates memory for data, sets size to 0, sets canaries, allocates memory for hash,
  *                    poisons all the memory.
@@ -154,57 +165,70 @@ enum CALL_FROM {
  *
 */
 enum CTOR_OUT
-StackCtor(stack *stk,
-          int    capacity);
+StackCtor(stack          *stk,
+          int            capacity,
+          stk_debug_info debug_info);
 
 //-------------------------------------------------------------------------------------
 /**
  * @param [out] stk stack
  * @param [in]  new_capacity new required capacity of the stack (previously calculated in GetNewCapacity)
+ * @param [in] debug_info contains info about place from which we got into function
  *
  * @brief reallocs data with canaries, poisons it, to do it
  *                                                 calls inner function StackDataRealloc
 */
 enum REALLC_OUT
-StackRealloc(stack *stk, int new_capacity);
+StackRealloc(stack          *stk,
+             int            new_capacity,
+             stk_debug_info debug_info);
 
 //-------------------------------------------------------------------------------------
 enum DTOR_OUT
 /**
  * @param [out] stk stack
+ * @param [in] debug_info contains info about place from which we got into function
  *
  * destructs stack
 */
-StackDtor(stack *stk);
+StackDtor(stack *stk, stk_debug_info debug_info);
 
 //-------------------------------------------------------------------------------------
 /**
  * @param [out] stk  stack
  * @param [in]  value value to be pushed in stack
+ * @param [in] debug_info contains info about place from which we got into function
 */
 enum PUSH_OUT
-StackPush(stack *stk,
-          Elem_t value);
+StackPush(stack          *stk,
+          Elem_t         value,
+          stk_debug_info debug_info);
 
 //-------------------------------------------------------------------------------------
 /**
  * @param [in]  stk stack
  * @param [out] err error handling variable
+ * @param [in] debug_info contains info about place from which we got into function
 */
 Elem_t
-StackPop(stack   *     stk,
-         enum POP_OUT *err);
+StackPop(stack          *stk,
+         enum POP_OUT   *err,
+         stk_debug_info debug_info);
 
 //-------------------------------------------------------------------------------------
 /**
- * @param [in] fname output file name
- * @param [in] stk   stack
+ * @param [in] fname      output file name
+ * @param [in] stk        stack
  * @param [in] err_vector contains codes of errors
- * @param [in] err_file file from which dump was called
- * @param [in] err_line line from which dump was called
- * @param [in] err_func func from which dump was called
+ * @param [in] err_file   file from which dump was called
+ * @param [in] err_line   line from which dump was called
+ * @param [in] err_func   func from which dump was called
+ * @param [in] stk_debug  debug info
+ * @param [in] debug_info contains info about place from which we got into function
  *
  * @brief prints whole info about stack to file
+ *
+ * WORKS ONLY IN DEBUG MODE
 */
 void
 StackDump(const char  * const fname,
@@ -213,7 +237,24 @@ StackDump(const char  * const fname,
           const char  * const stk_name,
           const char  * const err_file,
           int                 err_line,
-          const char  * const err_func);
+          const char  * const err_func,
+          stk_debug_info      debug_info);
 
 //-------------------------------------------------------------------------------------
+/**
+ * @param [in] stk stack
+ * @param [out] call_from contains info for hash protect about from what part of func StackErr was called
+ *
+ * @brief forms error vector - number like 1011100000 where 1 - has error, 0 - does not have error,
+ *        if call_from == F_BEGIN - calculates new hash and compares it with the old one (must be equal)
+ *        if call_from == F_MID  - does nothing with hash
+ *        if call_from == F_END  - calculates new hash and sets previous hash = new hash
+*/
 size_t StackErr(stack *stk, enum CALL_FROM call_from);
+
+//-------------------------------------------------------------------------------------
+/**
+ * @param [in] stk_name string containing stack name
+ * anscillary func for macros-wrapper, returns debug info about stack
+*/
+stk_debug_info UpdDebugInfo (const char *stk_name, const char *filename, int line);
