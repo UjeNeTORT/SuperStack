@@ -1,102 +1,18 @@
-stack[0x7fff49d9ae90] stk from ######## (-1)
-             called from stack.cpp (127) StackCtor
+stack[0x7ffe40f2eb40] stk from ######## (-1)
+             called from stack.cpp (169) StackDtor
 {
-size     = 0 (MX_STK = 100)
-capacity = 10
-stack hash = 0
-ERRORS: data hashes does not match, sudden attack, stack hash does not match, sudden attack
+size     = -1 (MX_STK = 100)
+capacity = -1
+left  stack canary[0x7ffe40f2eb40] = 0 (corrupted)
+right stack canary[0x7ffe40f2eb80] = 0 (corrupted)
+stack hash = 900120640
+ERRORS: buf null pointer, size < 0, capacity <= 0, init capacity is bigger than capacity, left canary: data attacked from the left, right canary: data attacked from the right, left canary: stack attacked from the left, right canary: stack attacked from the right, stack hash does not match, sudden attack
 
-hash_sum = 235888513
-l_canary[0x562bcfe3df50] = 12938577313804550314 (ok)
-r_canary[0x562bcfe3df80] = 12938577313804550314 (ok)
-buf[0x562bcfe3df58]
+hash_sum = 0
+l_canary[(nil)] = 0 (ptr null)
+r_canary[(nil)] = 0 (ptr null)
+buf[(nil)]
 	{
-		 [   0] =          0 
-		 [   1] =          0 
-		 [   2] =          0 
-		 [   3] =          0 
-		 [   4] =          0 
-		 [   5] =          0 
-		 [   6] =          0 
-		 [   7] =          0 
-		 [   8] =          0 
-		 [   9] =          0 
-	}
-}
-stack[0x7ffe63ad4740] stk from ######## (-1)
-             called from stack.cpp (127) StackCtor
-{
-size     = 0 (MX_STK = 100)
-capacity = 10
-stack hash = 0
-ERRORS: data hashes does not match, sudden attack, stack hash does not match, sudden attack
-
-hash_sum = 235888513
-l_canary[0x5556d3f59f50] = 12938577313804550314 (ok)
-r_canary[0x5556d3f59f80] = 12938577313804550314 (ok)
-buf[0x5556d3f59f58]
-	{
-		 [   0] =          0 
-		 [   1] =          0 
-		 [   2] =          0 
-		 [   3] =          0 
-		 [   4] =          0 
-		 [   5] =          0 
-		 [   6] =          0 
-		 [   7] =          0 
-		 [   8] =          0 
-		 [   9] =          0 
-	}
-}
-stack[0x7ffc2047fdc0] stk from ######## (-1)
-             called from stack.cpp (131) StackCtor
-{
-size     = 0 (MX_STK = 100)
-capacity = 10
-left  stack canary[0x7ffc2047fdc0] = 12938577313804550314 (ok)
-right stack canary[0x7ffc2047fdf8] = 12938577313804550314 (ok)
-ERRORS: data hashes does not match, sudden attack
-
-hash_sum = 235888513
-l_canary[0x55daa7282f30] = 12938577313804550314 (ok)
-r_canary[0x55daa7282f60] = 12938577313804550314 (ok)
-buf[0x55daa7282f38]
-	{
-		 [   0] =          0 
-		 [   1] =          0 
-		 [   2] =          0 
-		 [   3] =          0 
-		 [   4] =          0 
-		 [   5] =          0 
-		 [   6] =          0 
-		 [   7] =          0 
-		 [   8] =          0 
-		 [   9] =          0 
-	}
-}
-stack[0x7ffeee39ed60] stk from ######## (-1)
-             called from stack.cpp (131) StackCtor
-{
-size     = 0 (MX_STK = 100)
-capacity = 10
-left  stack canary[0x7ffeee39ed60] = 12938577313804550314 (ok)
-right stack canary[0x7ffeee39ed98] = 12938577313804550314 (ok)
-ERRORS: data hashes does not match, sudden attack
-
-hash_sum = 235888513
-l_canary[0x55e92d235340] = 12938577313804550314 (ok)
-r_canary[0x55e92d235370] = 12938577313804550314 (ok)
-buf[0x55e92d235348]
-	{
-		 [   0] =          0 
-		 [   1] =          0 
-		 [   2] =          0 
-		 [   3] =          0 
-		 [   4] =          0 
-		 [   5] =          0 
-		 [   6] =          0 
-		 [   7] =          0 
-		 [   8] =          0 
-		 [   9] =          0 
+		buf null pointer, nothing to look at
 	}
 }
