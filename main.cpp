@@ -10,6 +10,7 @@ int main() {
     enum PUSH_OUT push_err = PUSH_NO_ERR;
 
     StackCtor(&cat, 1, DEBUG_INFO(cat));
+    StackCtor(&cat, 1, DEBUG_INFO(cat));
 
     StackPush(&cat,  1, DEBUG_INFO(cat));
     StackPush(&cat,  2, DEBUG_INFO(cat));
@@ -57,6 +58,7 @@ int main() {
         printf("error in pop, please, launch in debug mode to see\n");
 
 
+    StackDtor(&cat, DEBUG_INFO(cat));
     StackDtor(&cat, DEBUG_INFO(cat));
 
     printf("we are at the end! EEEEEEEOOOOOO\n");

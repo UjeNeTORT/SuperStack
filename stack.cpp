@@ -1,57 +1,3 @@
-//TODO handle some shit that can happen if something
-
-/*
-
-TODO
-
-[DONE] return int -> enum
-
-rename StackX -> XStack so as not to type Stack every time u need some func
-
-stack dump: fix ########
-
-[DONE] capacity decreasing (we need capacity to never be less than initial capacity)
-[DONE] init capacity
-
-[DONE] make stderr printfs if somethings broken
-
-[DONE] add constant to manually increase / decrease stack capacity (now it is 2)
-
-[DONE] StackPop - make argument to catch errors
-
-[DONE] return POISON (read hex speak)
-
-[DONE] max_stack may not be nessessary (calloc already bounds something - TOREAD)
-
-poison is not portable on other Elem_ts - TOASK
-
-[DONE] StackRealloc does not set other values to POISON - make func for set to poison
-
-[DONE] StackDtor memset musor before free
-
-[DONE] canary protect (FAT MAMA BIRD)
-[DONE] canary to условная компиляция
-
-vscode configuration
-
-[DONE] what if debug mode is off
-
-log file with time in name
-
-how to protect initial capacity? - by hash
-
-local define (ask sanya)
-
-[FUNNY] stack dump + dump for dump + dump for dump for dump + dump for dump for dump for dump (lol)
-
-add calloc checks in Stackcalloc
-
-[DONE] lc + data + rc to struct
-
-[[noignore]]
-
-*/
-
 #include <assert.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -80,21 +26,71 @@ enum DATA_RLLC_OUT {
     DATA_RLLC_ERR      =  1
 };
 
+//-------------------------------------------------------------------------------------
+/**
+ * @param [out] data     stack data structure
+ * @param [in]  capacity stack capacity
+ *
+ * @brief calloc memory of size capacity * sizeof(elem_t) for data ptr
+*/
 static enum DATA_CLLC_OUT
               StackDataCalloc    (stk_data * data, int capacity);
 
+//-------------------------------------------------------------------------------------
+/**
+ * @param [out] data stack data structure
+ * @param [in] new_capacity new required stack data size
+ *
+ * @brief reallocs pointers of data structure and canaries
+*/
 static enum DATA_RLLC_OUT
               StackDataRealloc   (stk_data * data, int new_capacity);
 
+//-------------------------------------------------------------------------------------
+/**
+ * @param [out] stk        stack structure
+ * @param [in]  debug_info contains info about place from which we got into function
+ *
+ * @brief sets values of stack data to poison
+*/
 static enum POISON_OUT
               StackPoison        (stack *stk, stk_debug_info debuf_info);
 
+//-------------------------------------------------------------------------------------
+/**
+ * @param [out] data     data structure
+ * @param [in]  capacity capacity
+*/
 static void   FreeData           (stk_data *data, int capacity);
 
+//-------------------------------------------------------------------------------------
+/**
+ * @param [in] err_vector vector with errors 1011100 and so on (1 - error, 0 - no error)
+ *
+ * @return pointer to string with all the errors messages
+ *
+ * @brief concatenates error message based on what the errors from err_vector are
+*/
 static char * FormErrMsg         (size_t err_vector);
 
+//-------------------------------------------------------------------------------------
+/**
+ * @param [in] fout file to contain log
+ * @param [in] stk  stack pointer
+ *
+ * @brief prints data values from stack for dump
+*/
 static void   PrintStackDataDump (FILE *fout, const stack *stk);
 
+//-------------------------------------------------------------------------------------
+/**
+ * @param [in] stk        stack pointer
+ * @param [in] debug_info contains info about place from which we got into function
+ *
+ * @return new capacity if it is to be changed
+ *
+ * @brief calculates new capacity for stack based on what stack size and capacity are
+*/
 static int    GetNewCapacity     (stack *stk, stk_debug_info debuf_info);
 
 // in order not to create another one every time i need it
@@ -108,6 +104,14 @@ enum CTOR_OUT StackCtor(stack *stk, int capacity, stk_debug_info debug_info) {
     assert(stk);
     if (!stk)
         return CTOR_NULL_STK;
+
+    //assume that stk didnt go through constructor before, if yes - abort()
+    size_t err = StackErr(stk, F_MID);
+    if (!StackErr(stk, F_MID)) {
+        STACK_DUMP(LOG_FILE, stk, err, debug_info);
+        fprintf(stderr, "attempt to call constructor 2 times\n");
+        abort();
+    }
 
     #if (defined(STACK_CANARY_PROTECT))
 
@@ -313,7 +317,7 @@ static enum DATA_CLLC_OUT StackDataCalloc (stk_data * data, int capacity) {
 }
 
 //-------------------------------------------------------------------------------------
-static enum DATA_RLLC_OUT StackDataRealloc (stk_data * data, int new_capacity) {
+static enum DATA_RLLC_OUT StackDataRealloc (stk_data *data, int new_capacity) {
 
     assert(data);
     if (!data)
@@ -438,6 +442,8 @@ void StackDump(const char  * const fname,
     PrintStackDataDump(fout, stk);
 
     fprintf(fout, "}\n");
+
+    fprintf(fout, "------------------------------------------------------\n");
 
     fclose(fout);
 }
