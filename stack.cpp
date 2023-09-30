@@ -338,6 +338,8 @@ static enum DATA_RLLC_OUT StackDataRealloc (stk_data *data, int new_capacity) {
         data->r_canary = (Canary_t * ) (data->buf + new_capacity);
         *data->r_canary = RIGHT_CHICK;
 
+        // StackPoison(stk, debug_info); // calloc analogy
+
         #if (defined(DATA_HASH_PROTECT))
 
             data->hash_sum = HashMod(data->l_canary, new_capacity * sizeof(Elem_t) + 2 * sizeof(Canary_t));

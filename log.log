@@ -36,3 +36,722 @@ buf[0x603000000048]
 	}
 }
 ------------------------------------------------------
+stack[0x7ffe57b886d0] cat from main.cpp (13)
+             called from stack.cpp (111) StackCtor
+{
+size     = 0 (MX_STK = 100)
+capacity = 1
+left  stack canary[0x7ffe57b886d0] = 12938577313804550314 (ok)
+right stack canary[0x7ffe57b88710] = 12938577313804550314 (ok)
+stack hash = 249622069
+ERRORS: 
+
+hash_sum = 13634846
+l_canary[0x603000000040] = 12938577313804550314 (ok)
+r_canary[0x60300000004c] = 12938577313804550314 (ok)
+buf[0x603000000048]
+	{
+		 [   0] = 13634846 (POISON)
+	}
+}
+------------------------------------------------------
+stack[0x7ffc8fd73570] cat from main.cpp (61)
+             called from stack.cpp (173) StackDtor
+{
+size     = -1 (MX_STK = 100)
+capacity = -1
+left  stack canary[0x7ffc8fd73570] = 0 (corrupted)
+right stack canary[0x7ffc8fd735b0] = 0 (corrupted)
+stack hash = 290527342
+ERRORS: buf null pointer, size < 0, capacity <= 0, init capacity is bigger than capacity, left canary: data attacked from the left, right canary: data attacked from the right, left canary: stack attacked from the left, right canary: stack attacked from the right, stack hash does not match, sudden attack
+
+hash_sum = 0
+l_canary[(nil)] = 0 (ptr null)
+r_canary[(nil)] = 0 (ptr null)
+buf[(nil)]
+	{
+		buf null pointer, nothing to look at
+	}
+}
+------------------------------------------------------
+stack[0x7ffd9cdc92f0] cat from main.cpp (61)
+             called from stack.cpp (173) StackDtor
+{
+size     = -1 (MX_STK = 100)
+capacity = -1
+left  stack canary[0x7ffd9cdc92f0] = 0 (corrupted)
+right stack canary[0x7ffd9cdc9330] = 0 (corrupted)
+stack hash = 290527342
+ERRORS: buf null pointer, size < 0, capacity <= 0, init capacity is bigger than capacity, left canary: data attacked from the left, right canary: data attacked from the right, left canary: stack attacked from the left, right canary: stack attacked from the right, stack hash does not match, sudden attack
+
+hash_sum = 0
+l_canary[(nil)] = 0 (ptr null)
+r_canary[(nil)] = 0 (ptr null)
+buf[(nil)]
+	{
+		buf null pointer, nothing to look at
+	}
+}
+------------------------------------------------------
+stack[0x7fffc8ed6eb0] cat from main.cpp (14)
+             called from stack.cpp (211) StackPush
+{
+size     = 1 (MX_STK = 100)
+capacity = 2
+left  stack canary[0x7fffc8ed6eb0] = 12938577313804550314 (ok)
+right stack canary[0x7fffc8ed6ef0] = 12938577313804550314 (ok)
+stack hash = 301526494
+ERRORS: 
+
+hash_sum = 13634847
+l_canary[0x56041e936f50] = 12938577313804550314 (ok)
+r_canary[0x56041e936f60] = 12938577313804550314 (ok)
+buf[0x56041e936f58]
+	{
+		*[   0] =      1
+		 [   1] = 13634846 (POISON)
+	}
+}
+------------------------------------------------------
+stack[0x7fffc8ed6eb0] cat from main.cpp (15)
+             called from stack.cpp (211) StackPush
+{
+size     = 2 (MX_STK = 100)
+capacity = 4
+left  stack canary[0x7fffc8ed6eb0] = 12938577313804550314 (ok)
+right stack canary[0x7fffc8ed6ef0] = 12938577313804550314 (ok)
+stack hash = 315162889
+ERRORS: 
+
+hash_sum = 27269695
+l_canary[0x56041e937150] = 12938577313804550314 (ok)
+r_canary[0x56041e937168] = 12938577313804550314 (ok)
+buf[0x56041e937158]
+	{
+		*[   0] =      1
+		*[   1] =      2
+		 [   2] = 13634846 (POISON)
+		 [   3] = 13634846 (POISON)
+	}
+}
+------------------------------------------------------
+stack[0x7fffc8ed6eb0] cat from main.cpp (16)
+             called from stack.cpp (211) StackPush
+{
+size     = 3 (MX_STK = 100)
+capacity = 8
+left  stack canary[0x7fffc8ed6eb0] = 12938577313804550314 (ok)
+right stack canary[0x7fffc8ed6ef0] = 12938577313804550314 (ok)
+stack hash = 356067451
+ERRORS: 
+
+hash_sum = 68174236
+l_canary[0x56041e937150] = 12938577313804550314 (ok)
+r_canary[0x56041e937178] = 12938577313804550314 (ok)
+buf[0x56041e937158]
+	{
+		*[   0] =      1
+		*[   1] =      2
+		*[   2] =      3
+		 [   3] = 13634846 (POISON)
+		 [   4] = 13634846 (POISON)
+		 [   5] = 13634846 (POISON)
+		 [   6] = 13634846 (POISON)
+		 [   7] = 13634846 (POISON)
+	}
+}
+------------------------------------------------------
+stack[0x7fffc8ed6eb0] cat from main.cpp (17)
+             called from stack.cpp (211) StackPush
+{
+size     = 4 (MX_STK = 100)
+capacity = 4
+left  stack canary[0x7fffc8ed6eb0] = 12938577313804550314 (ok)
+right stack canary[0x7fffc8ed6ef0] = 12938577313804550314 (ok)
+stack hash = 287893206
+ERRORS: 
+
+hash_sum = 10
+l_canary[0x56041e937150] = 12938577313804550314 (ok)
+r_canary[0x56041e937168] = 12938577313804550314 (ok)
+buf[0x56041e937158]
+	{
+		*[   0] =      1
+		*[   1] =      2
+		*[   2] =      3
+		*[   3] =      4
+	}
+}
+------------------------------------------------------
+stack[0x7fffc8ed6eb0] cat from main.cpp (18)
+             called from stack.cpp (211) StackPush
+{
+size     = 5 (MX_STK = 100)
+capacity = 8
+left  stack canary[0x7fffc8ed6eb0] = 12938577313804550314 (ok)
+right stack canary[0x7fffc8ed6ef0] = 12938577313804550314 (ok)
+stack hash = 328797770
+ERRORS: 
+
+hash_sum = 40904553
+l_canary[0x56041e937150] = 12938577313804550314 (ok)
+r_canary[0x56041e937178] = 12938577313804550314 (ok)
+buf[0x56041e937158]
+	{
+		*[   0] =      1
+		*[   1] =      2
+		*[   2] =      3
+		*[   3] =      4
+		*[   4] =      5
+		 [   5] = 13634846 (POISON)
+		 [   6] = 13634846 (POISON)
+		 [   7] = 13634846 (POISON)
+	}
+}
+------------------------------------------------------
+stack[0x7fffc8ed6eb0] cat from main.cpp (19)
+             called from stack.cpp (211) StackPush
+{
+size     = 6 (MX_STK = 100)
+capacity = 16
+left  stack canary[0x7fffc8ed6eb0] = 12938577313804550314 (ok)
+right stack canary[0x7fffc8ed6ef0] = 12938577313804550314 (ok)
+stack hash = 424241739
+ERRORS: 
+
+hash_sum = 136348481
+l_canary[0x56041e937150] = 12938577313804550314 (ok)
+r_canary[0x56041e937198] = 12938577313804550314 (ok)
+buf[0x56041e937158]
+	{
+		*[   0] =      1
+		*[   1] =      2
+		*[   2] =      3
+		*[   3] =      4
+		*[   4] =      5
+		*[   5] =      6
+		 [   6] = 13634846 (POISON)
+		 [   7] = 13634846 (POISON)
+		 [   8] = 13634846 (POISON)
+		 [   9] = 13634846 (POISON)
+		 [  10] = 13634846 (POISON)
+		 [  11] = 13634846 (POISON)
+		 [  12] = 13634846 (POISON)
+		 [  13] = 13634846 (POISON)
+		 [  14] = 13634846 (POISON)
+		 [  15] = 13634846 (POISON)
+	}
+}
+------------------------------------------------------
+stack[0x7fffc8ed6eb0] cat from main.cpp (20)
+             called from stack.cpp (211) StackPush
+{
+size     = 7 (MX_STK = 100)
+capacity = 8
+left  stack canary[0x7fffc8ed6eb0] = 12938577313804550314 (ok)
+right stack canary[0x7fffc8ed6ef0] = 12938577313804550314 (ok)
+stack hash = 301528093
+ERRORS: 
+
+hash_sum = 13634874
+l_canary[0x56041e937150] = 12938577313804550314 (ok)
+r_canary[0x56041e937178] = 12938577313804550314 (ok)
+buf[0x56041e937158]
+	{
+		*[   0] =      1
+		*[   1] =      2
+		*[   2] =      3
+		*[   3] =      4
+		*[   4] =      5
+		*[   5] =      6
+		*[   6] =      7
+		 [   7] = 13634846 (POISON)
+	}
+}
+------------------------------------------------------
+stack[0x7fffc8ed6eb0] cat from main.cpp (21)
+             called from stack.cpp (211) StackPush
+{
+size     = 8 (MX_STK = 100)
+capacity = 16
+left  stack canary[0x7fffc8ed6eb0] = 12938577313804550314 (ok)
+right stack canary[0x7fffc8ed6ef0] = 12938577313804550314 (ok)
+stack hash = 396972352
+ERRORS: 
+
+hash_sum = 109078804
+l_canary[0x56041e9371b0] = 12938577313804550314 (ok)
+r_canary[0x56041e9371f8] = 12938577313804550314 (ok)
+buf[0x56041e9371b8]
+	{
+		*[   0] =      1
+		*[   1] =      2
+		*[   2] =      3
+		*[   3] =      4
+		*[   4] =      5
+		*[   5] =      6
+		*[   6] =      7
+		*[   7] =      8
+		 [   8] = 13634846 (POISON)
+		 [   9] = 13634846 (POISON)
+		 [  10] = 13634846 (POISON)
+		 [  11] = 13634846 (POISON)
+		 [  12] = 13634846 (POISON)
+		 [  13] = 13634846 (POISON)
+		 [  14] = 13634846 (POISON)
+		 [  15] = 13634846 (POISON)
+	}
+}
+------------------------------------------------------
+stack[0x7fffc8ed6eb0] cat from main.cpp (22)
+             called from stack.cpp (211) StackPush
+{
+size     = 9 (MX_STK = 100)
+capacity = 16
+left  stack canary[0x7fffc8ed6eb0] = 12938577313804550314 (ok)
+right stack canary[0x7fffc8ed6ef0] = 12938577313804550314 (ok)
+stack hash = 383337516
+ERRORS: 
+
+hash_sum = 95443967
+l_canary[0x56041e9371b0] = 12938577313804550314 (ok)
+r_canary[0x56041e9371f8] = 12938577313804550314 (ok)
+buf[0x56041e9371b8]
+	{
+		*[   0] =      1
+		*[   1] =      2
+		*[   2] =      3
+		*[   3] =      4
+		*[   4] =      5
+		*[   5] =      6
+		*[   6] =      7
+		*[   7] =      8
+		*[   8] =      9
+		 [   9] = 13634846 (POISON)
+		 [  10] = 13634846 (POISON)
+		 [  11] = 13634846 (POISON)
+		 [  12] = 13634846 (POISON)
+		 [  13] = 13634846 (POISON)
+		 [  14] = 13634846 (POISON)
+		 [  15] = 13634846 (POISON)
+	}
+}
+------------------------------------------------------
+stack[0x7fffc8ed6eb0] cat from main.cpp (23)
+             called from stack.cpp (211) StackPush
+{
+size     = 10 (MX_STK = 100)
+capacity = 16
+left  stack canary[0x7fffc8ed6eb0] = 12938577313804550314 (ok)
+right stack canary[0x7fffc8ed6ef0] = 12938577313804550314 (ok)
+stack hash = 369702681
+ERRORS: 
+
+hash_sum = 81809131
+l_canary[0x56041e9371b0] = 12938577313804550314 (ok)
+r_canary[0x56041e9371f8] = 12938577313804550314 (ok)
+buf[0x56041e9371b8]
+	{
+		*[   0] =      1
+		*[   1] =      2
+		*[   2] =      3
+		*[   3] =      4
+		*[   4] =      5
+		*[   5] =      6
+		*[   6] =      7
+		*[   7] =      8
+		*[   8] =      9
+		*[   9] =     10
+		 [  10] = 13634846 (POISON)
+		 [  11] = 13634846 (POISON)
+		 [  12] = 13634846 (POISON)
+		 [  13] = 13634846 (POISON)
+		 [  14] = 13634846 (POISON)
+		 [  15] = 13634846 (POISON)
+	}
+}
+------------------------------------------------------
+stack[0x7fffc8ed6eb0] cat from main.cpp (24)
+             called from stack.cpp (211) StackPush
+{
+size     = 11 (MX_STK = 100)
+capacity = 16
+left  stack canary[0x7fffc8ed6eb0] = 12938577313804550314 (ok)
+right stack canary[0x7fffc8ed6ef0] = 12938577313804550314 (ok)
+stack hash = 356067847
+ERRORS: 
+
+hash_sum = 68174296
+l_canary[0x56041e9371b0] = 12938577313804550314 (ok)
+r_canary[0x56041e9371f8] = 12938577313804550314 (ok)
+buf[0x56041e9371b8]
+	{
+		*[   0] =      1
+		*[   1] =      2
+		*[   2] =      3
+		*[   3] =      4
+		*[   4] =      5
+		*[   5] =      6
+		*[   6] =      7
+		*[   7] =      8
+		*[   8] =      9
+		*[   9] =     10
+		*[  10] =     11
+		 [  11] = 13634846 (POISON)
+		 [  12] = 13634846 (POISON)
+		 [  13] = 13634846 (POISON)
+		 [  14] = 13634846 (POISON)
+		 [  15] = 13634846 (POISON)
+	}
+}
+------------------------------------------------------
+stack[0x7fffc8ed6eb0] cat from main.cpp (25)
+             called from stack.cpp (211) StackPush
+{
+size     = 12 (MX_STK = 100)
+capacity = 32
+left  stack canary[0x7fffc8ed6eb0] = 12938577313804550314 (ok)
+right stack canary[0x7fffc8ed6ef0] = 12938577313804550314 (ok)
+stack hash = 560590630
+ERRORS: 
+
+hash_sum = 272696998
+l_canary[0x56041e9371b0] = 12938577313804550314 (ok)
+r_canary[0x56041e937238] = 12938577313804550314 (ok)
+buf[0x56041e9371b8]
+	{
+		*[   0] =      1
+		*[   1] =      2
+		*[   2] =      3
+		*[   3] =      4
+		*[   4] =      5
+		*[   5] =      6
+		*[   6] =      7
+		*[   7] =      8
+		*[   8] =      9
+		*[   9] =     10
+		*[  10] =     11
+		*[  11] =     12
+		 [  12] = 13634846 (POISON)
+		 [  13] = 13634846 (POISON)
+		 [  14] = 13634846 (POISON)
+		 [  15] = 13634846 (POISON)
+		 [  16] = 13634846 (POISON)
+		 [  17] = 13634846 (POISON)
+		 [  18] = 13634846 (POISON)
+		 [  19] = 13634846 (POISON)
+		 [  20] = 13634846 (POISON)
+		 [  21] = 13634846 (POISON)
+		 [  22] = 13634846 (POISON)
+		 [  23] = 13634846 (POISON)
+		 [  24] = 13634846 (POISON)
+		 [  25] = 13634846 (POISON)
+		 [  26] = 13634846 (POISON)
+		 [  27] = 13634846 (POISON)
+		 [  28] = 13634846 (POISON)
+		 [  29] = 13634846 (POISON)
+		 [  30] = 13634846 (POISON)
+		 [  31] = 13634846 (POISON)
+	}
+}
+------------------------------------------------------
+stack[0x7fffc8ed6eb0] cat from main.cpp (26)
+             called from stack.cpp (211) StackPush
+{
+size     = 13 (MX_STK = 100)
+capacity = 32
+left  stack canary[0x7fffc8ed6eb0] = 12938577313804550314 (ok)
+right stack canary[0x7fffc8ed6ef0] = 12938577313804550314 (ok)
+stack hash = 546955798
+ERRORS: 
+
+hash_sum = 259062165
+l_canary[0x56041e9371b0] = 12938577313804550314 (ok)
+r_canary[0x56041e937238] = 12938577313804550314 (ok)
+buf[0x56041e9371b8]
+	{
+		*[   0] =      1
+		*[   1] =      2
+		*[   2] =      3
+		*[   3] =      4
+		*[   4] =      5
+		*[   5] =      6
+		*[   6] =      7
+		*[   7] =      8
+		*[   8] =      9
+		*[   9] =     10
+		*[  10] =     11
+		*[  11] =     12
+		*[  12] =     13
+		 [  13] = 13634846 (POISON)
+		 [  14] = 13634846 (POISON)
+		 [  15] = 13634846 (POISON)
+		 [  16] = 13634846 (POISON)
+		 [  17] = 13634846 (POISON)
+		 [  18] = 13634846 (POISON)
+		 [  19] = 13634846 (POISON)
+		 [  20] = 13634846 (POISON)
+		 [  21] = 13634846 (POISON)
+		 [  22] = 13634846 (POISON)
+		 [  23] = 13634846 (POISON)
+		 [  24] = 13634846 (POISON)
+		 [  25] = 13634846 (POISON)
+		 [  26] = 13634846 (POISON)
+		 [  27] = 13634846 (POISON)
+		 [  28] = 13634846 (POISON)
+		 [  29] = 13634846 (POISON)
+		 [  30] = 13634846 (POISON)
+		 [  31] = 13634846 (POISON)
+	}
+}
+------------------------------------------------------
+stack[0x7fffc8ed6eb0] cat from main.cpp (27)
+             called from stack.cpp (211) StackPush
+{
+size     = 14 (MX_STK = 100)
+capacity = 32
+left  stack canary[0x7fffc8ed6eb0] = 12938577313804550314 (ok)
+right stack canary[0x7fffc8ed6ef0] = 12938577313804550314 (ok)
+stack hash = 533320967
+ERRORS: 
+
+hash_sum = 245427333
+l_canary[0x56041e9371b0] = 12938577313804550314 (ok)
+r_canary[0x56041e937238] = 12938577313804550314 (ok)
+buf[0x56041e9371b8]
+	{
+		*[   0] =      1
+		*[   1] =      2
+		*[   2] =      3
+		*[   3] =      4
+		*[   4] =      5
+		*[   5] =      6
+		*[   6] =      7
+		*[   7] =      8
+		*[   8] =      9
+		*[   9] =     10
+		*[  10] =     11
+		*[  11] =     12
+		*[  12] =     13
+		*[  13] =     14
+		 [  14] = 13634846 (POISON)
+		 [  15] = 13634846 (POISON)
+		 [  16] = 13634846 (POISON)
+		 [  17] = 13634846 (POISON)
+		 [  18] = 13634846 (POISON)
+		 [  19] = 13634846 (POISON)
+		 [  20] = 13634846 (POISON)
+		 [  21] = 13634846 (POISON)
+		 [  22] = 13634846 (POISON)
+		 [  23] = 13634846 (POISON)
+		 [  24] = 13634846 (POISON)
+		 [  25] = 13634846 (POISON)
+		 [  26] = 13634846 (POISON)
+		 [  27] = 13634846 (POISON)
+		 [  28] = 13634846 (POISON)
+		 [  29] = 13634846 (POISON)
+		 [  30] = 13634846 (POISON)
+		 [  31] = 13634846 (POISON)
+	}
+}
+------------------------------------------------------
+stack[0x7fffc8ed6eb0] cat from main.cpp (28)
+             called from stack.cpp (211) StackPush
+{
+size     = 15 (MX_STK = 100)
+capacity = 32
+left  stack canary[0x7fffc8ed6eb0] = 12938577313804550314 (ok)
+right stack canary[0x7fffc8ed6ef0] = 12938577313804550314 (ok)
+stack hash = 519686137
+ERRORS: 
+
+hash_sum = 231792502
+l_canary[0x56041e9371b0] = 12938577313804550314 (ok)
+r_canary[0x56041e937238] = 12938577313804550314 (ok)
+buf[0x56041e9371b8]
+	{
+		*[   0] =      1
+		*[   1] =      2
+		*[   2] =      3
+		*[   3] =      4
+		*[   4] =      5
+		*[   5] =      6
+		*[   6] =      7
+		*[   7] =      8
+		*[   8] =      9
+		*[   9] =     10
+		*[  10] =     11
+		*[  11] =     12
+		*[  12] =     13
+		*[  13] =     14
+		*[  14] =     15
+		 [  15] = 13634846 (POISON)
+		 [  16] = 13634846 (POISON)
+		 [  17] = 13634846 (POISON)
+		 [  18] = 13634846 (POISON)
+		 [  19] = 13634846 (POISON)
+		 [  20] = 13634846 (POISON)
+		 [  21] = 13634846 (POISON)
+		 [  22] = 13634846 (POISON)
+		 [  23] = 13634846 (POISON)
+		 [  24] = 13634846 (POISON)
+		 [  25] = 13634846 (POISON)
+		 [  26] = 13634846 (POISON)
+		 [  27] = 13634846 (POISON)
+		 [  28] = 13634846 (POISON)
+		 [  29] = 13634846 (POISON)
+		 [  30] = 13634846 (POISON)
+		 [  31] = 13634846 (POISON)
+	}
+}
+------------------------------------------------------
+stack[0x7fffc8ed6eb0] cat from main.cpp (29)
+             called from stack.cpp (211) StackPush
+{
+size     = 16 (MX_STK = 100)
+capacity = 32
+left  stack canary[0x7fffc8ed6eb0] = 12938577313804550314 (ok)
+right stack canary[0x7fffc8ed6ef0] = 12938577313804550314 (ok)
+stack hash = 506051308
+ERRORS: 
+
+hash_sum = 218157672
+l_canary[0x56041e9371b0] = 12938577313804550314 (ok)
+r_canary[0x56041e937238] = 12938577313804550314 (ok)
+buf[0x56041e9371b8]
+	{
+		*[   0] =      1
+		*[   1] =      2
+		*[   2] =      3
+		*[   3] =      4
+		*[   4] =      5
+		*[   5] =      6
+		*[   6] =      7
+		*[   7] =      8
+		*[   8] =      9
+		*[   9] =     10
+		*[  10] =     11
+		*[  11] =     12
+		*[  12] =     13
+		*[  13] =     14
+		*[  14] =     15
+		*[  15] =     16
+		 [  16] = 13634846 (POISON)
+		 [  17] = 13634846 (POISON)
+		 [  18] = 13634846 (POISON)
+		 [  19] = 13634846 (POISON)
+		 [  20] = 13634846 (POISON)
+		 [  21] = 13634846 (POISON)
+		 [  22] = 13634846 (POISON)
+		 [  23] = 13634846 (POISON)
+		 [  24] = 13634846 (POISON)
+		 [  25] = 13634846 (POISON)
+		 [  26] = 13634846 (POISON)
+		 [  27] = 13634846 (POISON)
+		 [  28] = 13634846 (POISON)
+		 [  29] = 13634846 (POISON)
+		 [  30] = 13634846 (POISON)
+		 [  31] = 13634846 (POISON)
+	}
+}
+------------------------------------------------------
+stack[0x7fffc8ed6eb0] cat from main.cpp (30)
+             called from stack.cpp (211) StackPush
+{
+size     = 17 (MX_STK = 100)
+capacity = 32
+left  stack canary[0x7fffc8ed6eb0] = 12938577313804550314 (ok)
+right stack canary[0x7fffc8ed6ef0] = 12938577313804550314 (ok)
+stack hash = 492416480
+ERRORS: 
+
+hash_sum = 204522843
+l_canary[0x56041e9371b0] = 12938577313804550314 (ok)
+r_canary[0x56041e937238] = 12938577313804550314 (ok)
+buf[0x56041e9371b8]
+	{
+		*[   0] =      1
+		*[   1] =      2
+		*[   2] =      3
+		*[   3] =      4
+		*[   4] =      5
+		*[   5] =      6
+		*[   6] =      7
+		*[   7] =      8
+		*[   8] =      9
+		*[   9] =     10
+		*[  10] =     11
+		*[  11] =     12
+		*[  12] =     13
+		*[  13] =     14
+		*[  14] =     15
+		*[  15] =     16
+		*[  16] =     17
+		 [  17] = 13634846 (POISON)
+		 [  18] = 13634846 (POISON)
+		 [  19] = 13634846 (POISON)
+		 [  20] = 13634846 (POISON)
+		 [  21] = 13634846 (POISON)
+		 [  22] = 13634846 (POISON)
+		 [  23] = 13634846 (POISON)
+		 [  24] = 13634846 (POISON)
+		 [  25] = 13634846 (POISON)
+		 [  26] = 13634846 (POISON)
+		 [  27] = 13634846 (POISON)
+		 [  28] = 13634846 (POISON)
+		 [  29] = 13634846 (POISON)
+		 [  30] = 13634846 (POISON)
+		 [  31] = 13634846 (POISON)
+	}
+}
+------------------------------------------------------
+stack[0x7fffc8ed6eb0] cat from main.cpp (31)
+             called from stack.cpp (211) StackPush
+{
+size     = 18 (MX_STK = 100)
+capacity = 32
+left  stack canary[0x7fffc8ed6eb0] = 12938577313804550314 (ok)
+right stack canary[0x7fffc8ed6ef0] = 12938577313804550314 (ok)
+stack hash = 478781653
+ERRORS: 
+
+hash_sum = 190888015
+l_canary[0x56041e9371b0] = 12938577313804550314 (ok)
+r_canary[0x56041e937238] = 12938577313804550314 (ok)
+buf[0x56041e9371b8]
+	{
+		*[   0] =      1
+		*[   1] =      2
+		*[   2] =      3
+		*[   3] =      4
+		*[   4] =      5
+		*[   5] =      6
+		*[   6] =      7
+		*[   7] =      8
+		*[   8] =      9
+		*[   9] =     10
+		*[  10] =     11
+		*[  11] =     12
+		*[  12] =     13
+		*[  13] =     14
+		*[  14] =     15
+		*[  15] =     16
+		*[  16] =     17
+		*[  17] =     18
+		 [  18] = 13634846 (POISON)
+		 [  19] = 13634846 (POISON)
+		 [  20] = 13634846 (POISON)
+		 [  21] = 13634846 (POISON)
+		 [  22] = 13634846 (POISON)
+		 [  23] = 13634846 (POISON)
+		 [  24] = 13634846 (POISON)
+		 [  25] = 13634846 (POISON)
+		 [  26] = 13634846 (POISON)
+		 [  27] = 13634846 (POISON)
+		 [  28] = 13634846 (POISON)
+		 [  29] = 13634846 (POISON)
+		 [  30] = 13634846 (POISON)
+		 [  31] = 13634846 (POISON)
+	}
+}
+------------------------------------------------------
