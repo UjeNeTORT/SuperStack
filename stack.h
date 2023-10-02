@@ -25,9 +25,9 @@ typedef size_t Canary_t;
     #define ADD_ERR_MSG(prev, msg) strcat((*(prev)) ? strcat((prev), ", ") : (prev), (msg))
 
     // assume that err_vector declared before
-    #define ASSERT_STACK(stk, call_from, debg_inf)           \
+    #define ASSERT_STACK(stk, debg_inf)                      \
     {                                                        \
-        err_vector = StackErr(stk, call_from);               \
+        err_vector = StackErr(stk);                          \
         if (err_vector) {                                    \
             STACK_DUMP(LOG_FILE, stk, err_vector, debg_inf); \
             fprintf(stderr, "Stack corrupted. ABORTED\n");   \
@@ -40,7 +40,7 @@ typedef size_t Canary_t;
 #else
     #define STACK_DUMP(fname, stk, err_vector) ;
     #define ADD_ERR_MSG(prev, msg)             ;
-    #define ASSERT_STACK(stk, call_from)       ;
+    #define ASSERT_STACK(stk)                  ;
     #define DEBUG_INFO(stk)                    {NULL, NULL, -1}
 #endif // defined(DEBUG_MODE)
 
@@ -69,13 +69,7 @@ struct stk_data {
     Canary_t *l_canary;
     Canary_t *r_canary;
 
-    #endif // defined(DATA_CANARY_PROTECT)
-
-    #if (defined(DATA_HASH_PROTECT))
-
-    Hash_t    hash_sum;
-
-    #endif // defined(DATA_HASH_PROTECT)
+    #endif // defined(DATA_CANARY_PROTECT
 };
 
 //-------------------------------------------------------------------------------------
@@ -87,14 +81,23 @@ struct stack {
 
     #endif // defined(STACK_CANARY_PROTECT)
 
+    #if (defined(STACK_HASH_PROTECT))
+
+    Hash_t          stk_hash_sum;
+
+    #endif // defined(STACK_HASH_PROTECT)
+
+
+    #if (defined(DATA_HASH_PROTECT))
+
+    Hash_t          data_hash_sum;
+
+    #endif // defined(DATA_HASH_PROTECT)
+
     stk_data        data;
     int             size;
     int             capacity;      // int instead of size_t in order to catch errors
     int             init_capacity;
-
-    #if (defined(STACK_HASH_PROTECT))
-    Hash_t    *     hash_sum;
-    #endif // defined(STACK_HASH_PROTECT)
 
     #if (defined(STACK_CANARY_PROTECT))
 
@@ -243,14 +246,10 @@ StackDump(const char  * const fname,
 //-------------------------------------------------------------------------------------
 /**
  * @param [in] stk stack
- * @param [out] call_from contains info for hash protect about from what part of func StackErr was called
  *
  * @brief forms error vector - number like 1011100000 where 1 - has error, 0 - does not have error,
- *        if call_from == F_BEGIN - calculates new hash and compares it with the old one (must be equal)
- *        if call_from == F_MID  - does nothing with hash
- *        if call_from == F_END  - calculates new hash and sets previous hash = new hash
 */
-size_t StackErr(stack *stk, enum CALL_FROM call_from);
+size_t StackErr(stack *stk);
 
 //-------------------------------------------------------------------------------------
 /**

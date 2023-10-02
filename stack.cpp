@@ -92,10 +92,15 @@ static void   PrintStackDataDump (FILE *fout, const stack *stk);
  * @brief calculates new capacity for stack based on what stack size and capacity are
 */
 static int    GetNewCapacity     (stack *stk, stk_debug_info debuf_info);
+//-------------------------------------------------------------------------------------
+/**
+ *
+*/
+static void UpdStackHash(stack *stk);
 
 // in order not to create another one every time i need it
 unsigned err_vector = 0;
-char * err_msg = (char *) calloc(MAX_ERR_MSG_STRING, sizeof(char *));
+char * err_msg = (char *) calloc(MAX_ERR_MSG_STRING, sizeof(char *)); //
 
 //-------------------------------------------------------------------------------------
 enum CTOR_OUT StackCtor(stack *stk, int capacity, stk_debug_info debug_info) {
@@ -106,8 +111,8 @@ enum CTOR_OUT StackCtor(stack *stk, int capacity, stk_debug_info debug_info) {
         return CTOR_NULL_STK;
 
     //assume that stk didnt go through constructor before, if yes - abort()
-    size_t err = StackErr(stk, F_MID);
-    if (!StackErr(stk, F_MID)) {
+    size_t err = StackErr(stk);
+    if (!StackErr(stk)) {
         STACK_DUMP(LOG_FILE, stk, err, debug_info);
         fprintf(stderr, "attempt to call constructor 2 times\n");
         abort();
@@ -124,22 +129,18 @@ enum CTOR_OUT StackCtor(stack *stk, int capacity, stk_debug_info debug_info) {
     stk->capacity      = capacity;
     stk->init_capacity = capacity;
 
-    #if (defined(STACK_HASH_PROTECT))
-
-    stk->hash_sum = (Hash_t *) calloc(1, sizeof(Hash_t));
-
-    #endif // defined(STACK_HASH_PROTECT)
-
     StackDataCalloc(&stk->data, capacity);
 
-    ASSERT_STACK(stk, F_MID, debug_info);
-    if (StackErr(stk, F_MID))
+    UpdStackHash(stk);
+    ASSERT_STACK(stk, debug_info);
+    if (StackErr(stk))
         return CTOR_ERR;
 
     StackPoison(stk, debug_info);
 
-    ASSERT_STACK(stk, F_END, debug_info);
-    if (StackErr(stk, F_END))
+    UpdStackHash(stk);
+    ASSERT_STACK(stk, debug_info);
+    if (StackErr(stk))
         return CTOR_ERR;
 
     return CTOR_NO_ERR;
@@ -148,8 +149,8 @@ enum CTOR_OUT StackCtor(stack *stk, int capacity, stk_debug_info debug_info) {
 //-------------------------------------------------------------------------------------
 enum REALLC_OUT StackRealloc(stack *stk, int new_capacity, stk_debug_info debug_info) {
 
-    ASSERT_STACK(stk, F_MID, debug_info);
-    if (StackErr(stk, F_MID))
+    ASSERT_STACK(stk, debug_info);
+    if (StackErr(stk))
         return REALLC_ERR_SIDE;
 
     if (stk->capacity != new_capacity) {
@@ -158,10 +159,12 @@ enum REALLC_OUT StackRealloc(stack *stk, int new_capacity, stk_debug_info debug_
         stk->capacity = new_capacity;
     }
 
+    UpdStackHash(stk);
     StackPoison(stk, debug_info);
 
-    ASSERT_STACK(stk, F_END, debug_info);
-    if (StackErr(stk, F_END))
+    UpdStackHash(stk);
+    ASSERT_STACK(stk, debug_info);
+    if (StackErr(stk))
         return REALLC_ERR;
 
     return REALLC_NO_ERR;
@@ -170,8 +173,8 @@ enum REALLC_OUT StackRealloc(stack *stk, int new_capacity, stk_debug_info debug_
 //-------------------------------------------------------------------------------------
 enum DTOR_OUT StackDtor(stack *stk, stk_debug_info debug_info) {
 
-    ASSERT_STACK(stk, F_BEGIN, debug_info);
-    if (StackErr(stk, F_BEGIN))
+    ASSERT_STACK(stk, debug_info);
+    if (StackErr(stk))
         return DTOR_ERR_SIDE;
 
     #if (defined(STACK_CANARY_PROTECT))
@@ -186,6 +189,18 @@ enum DTOR_OUT StackDtor(stack *stk, stk_debug_info debug_info) {
     stk->size     = -1;
     stk->capacity = -1;
 
+    #if (defined(STACK_HASH_PROTECT))
+
+        stk->stk_hash_sum = 0;
+
+    #endif // defined(STACK_HASH_PROTECT)
+
+    #if (defined(DATA_HASH_PROTECT))
+
+        stk->data_hash_sum = 0;
+
+    #endif // defined(DATA_HASH_PROTECT)
+
     stk = NULL;
 
     return DTOR_DESTR;
@@ -194,8 +209,8 @@ enum DTOR_OUT StackDtor(stack *stk, stk_debug_info debug_info) {
 //-------------------------------------------------------------------------------------
 enum PUSH_OUT StackPush(stack *stk, Elem_t value, stk_debug_info debug_info) {
 
-    ASSERT_STACK(stk, F_BEGIN, debug_info);
-    if (StackErr(stk, F_BEGIN))
+    ASSERT_STACK(stk, debug_info);
+    if (StackErr(stk))
         return PUSH_ERR_SIDE;
 
     int new_capacity = GetNewCapacity(stk, debug_info);
@@ -205,8 +220,9 @@ enum PUSH_OUT StackPush(stack *stk, Elem_t value, stk_debug_info debug_info) {
     stk->data.buf[stk->size] = value;
     stk->size++;
 
-    ASSERT_STACK(stk, F_END, debug_info);
-    if (StackErr(stk, F_END))
+    UpdStackHash(stk);
+    ASSERT_STACK(stk, debug_info);
+    if (StackErr(stk))
         return PUSH_ERR;
 
     return PUSH_NO_ERR;
@@ -215,8 +231,10 @@ enum PUSH_OUT StackPush(stack *stk, Elem_t value, stk_debug_info debug_info) {
 //-------------------------------------------------------------------------------------
 Elem_t StackPop(stack *stk, enum POP_OUT *err, stk_debug_info debug_info) {
 
-    ASSERT_STACK(stk, F_BEGIN, debug_info);
-    if (StackErr(stk, F_BEGIN))
+    *err = POP_NO_ERR;
+
+    ASSERT_STACK(stk, debug_info);
+    if (StackErr(stk))
         *err = POP_ERR_SIDE;
 
     int new_capacity = GetNewCapacity(stk, debug_info);
@@ -229,19 +247,17 @@ Elem_t StackPop(stack *stk, enum POP_OUT *err, stk_debug_info debug_info) {
 
     Elem_t ret_value = stk->data.buf[stk->size];
 
-    ASSERT_STACK(stk, F_MID, debug_info);
-    if (StackErr(stk, F_MID))
+    UpdStackHash(stk);
+    ASSERT_STACK(stk, debug_info);
+    if (StackErr(stk))
         *err = POP_ERR;
-    else
-        *err = POP_NO_ERR;
 
     StackPoison(stk, debug_info);
 
-    ASSERT_STACK(stk, F_END, debug_info);
-    if (StackErr(stk, F_END))
+    UpdStackHash(stk);
+    ASSERT_STACK(stk, debug_info);
+    if (StackErr(stk))
         *err = POP_ERR;
-    else
-        *err = POP_NO_ERR;
 
     return ret_value;
 }
@@ -265,53 +281,34 @@ static enum DATA_CLLC_OUT StackDataCalloc (stk_data * data, int capacity) {
 
         data->buf = NULL;
 
-        #if (defined(DATA_HASH_PROTECT))
-
-        data->hash_sum = 0;
-
-        #endif // defined(DATA_HASH_PROTECT)
-
         return DATA_CLLC_ERR_SIDE;
     }
-    else {
 
-        #if (defined(DATA_CANARY_PROTECT))
+    #if (defined(DATA_CANARY_PROTECT))
 
-            Elem_t * init_buf_ptr = (Elem_t * ) calloc(capacity * sizeof(Elem_t) + 2 *sizeof(Canary_t), 1);
+        int padding = (capacity * sizeof(Elem_t)) % sizeof(Canary_t); // for alignment
 
-            if (!init_buf_ptr)
-                return DATA_CLLC_ERR;
+        data->buf = (Elem_t * ) calloc(capacity * sizeof(Elem_t) + 2 * sizeof(Canary_t) + padding, 1);
 
-            data->l_canary = (Canary_t *) init_buf_ptr;
-            *data->l_canary = LEFT_CHICK;
+        if (!data->buf)
+            return DATA_CLLC_ERR;
 
-            data->buf = (Elem_t * ) ((Canary_t * ) init_buf_ptr + 1);
+        data->l_canary = (Canary_t *) data->buf;
+        *data->l_canary = LEFT_CHICK;
 
-            data->r_canary = (Canary_t * ) (data->buf + capacity);
-            *data->r_canary = RIGHT_CHICK;
+        data->buf = (Elem_t *) ((Canary_t *) data->buf + 1);
 
-            #if (defined(DATA_HASH_PROTECT))
+        data->r_canary = (Canary_t *) ((char *) data->buf + capacity * sizeof(Elem_t) + padding); // alignment
+        *data->r_canary = RIGHT_CHICK;
 
-                data->hash_sum = HashMod(data->l_canary, capacity * sizeof(Elem_t) + 2 * sizeof(Canary_t));
+    #else
 
-            #endif // defined(DATA_HASH_PROTECT)
+        data->buf = (Elem_t *) calloc(capacity, sizeof(Elem_t));
 
-            #else
+        if (!data->buf)
+            return DATA_CLLC_ERR;
 
-                data->buf = (Elem_t *) calloc(capacity, sizeof(Elem_t));
-
-                #if (defined(DATA_HASH_PROTECT))
-
-                data->hash_sum = HashMod(data->buf, capacity * sizeof(Elem_t));
-
-            #endif // defined(DATA_HASH_PROTECT)
-
-            if (!data->buf)
-                return DATA_CLLC_ERR;
-
-        #endif // defined(DATA_CANARY_PROTECT)
-
-    }
+    #endif // defined(DATA_CANARY_PROTECT)
 
     return DATA_CLLC_NO_ERR;
 }
@@ -325,7 +322,9 @@ static enum DATA_RLLC_OUT StackDataRealloc (stk_data *data, int new_capacity) {
 
     #if (defined(DATA_CANARY_PROTECT))
 
-        data->buf = (Elem_t * ) realloc(data->l_canary, new_capacity * sizeof(Elem_t) + 2 * sizeof(Canary_t)); // CAREFULLY WITH CANARIES
+        int padding = (new_capacity * sizeof(Elem_t)) % sizeof(Canary_t); // for alignment
+
+        data->buf = (Elem_t * ) realloc(data->l_canary, new_capacity * sizeof(Elem_t) + 2 * sizeof(Canary_t) + padding);
 
         if (!data->buf)
             return DATA_RLLC_ERR;
@@ -335,16 +334,10 @@ static enum DATA_RLLC_OUT StackDataRealloc (stk_data *data, int new_capacity) {
 
         data->buf = (Elem_t *) ((Canary_t *) data->buf + 1);
 
-        data->r_canary = (Canary_t * ) (data->buf + new_capacity);
+        data->r_canary = (Canary_t *) ((char *) data->buf + new_capacity * sizeof(Elem_t) + padding); // alignment
         *data->r_canary = RIGHT_CHICK;
 
         // StackPoison(stk, debug_info); // calloc analogy
-
-        #if (defined(DATA_HASH_PROTECT))
-
-            data->hash_sum = HashMod(data->l_canary, new_capacity * sizeof(Elem_t) + 2 * sizeof(Canary_t));
-
-        #endif // defined(DATA_HASH_PROTECT)
 
     #else
 
@@ -353,12 +346,6 @@ static enum DATA_RLLC_OUT StackDataRealloc (stk_data *data, int new_capacity) {
         assert(data->buf);
         if (!data->buf)
             return DATA_RLLC_ERR;
-
-        #if (defined(DATA_HASH_PROTECT))
-
-            data->hash_sum = HashMod(data->buf, new_capacity);
-
-        #endif // defined(DATA_HASH_PROTECT)
 
     #endif // defined(DATA_CANARY_PROTECT)
 
@@ -389,12 +376,6 @@ static void FreeData (stk_data *data, int capacity) {
          data->r_canary = NULL;
 
     #endif // defined(DATA_CANARY_PROTECT)
-
-    #if (defined(DATA_HASH_PROTECT))
-
-        data->hash_sum = 0;
-
-    #endif // defined(DATA_HASH_PROTECT)
 }
 
 //-------------------------------------------------------------------------------------
@@ -433,7 +414,7 @@ void StackDump(const char  * const fname,
 
     #if (defined(STACK_HASH_PROTECT))
 
-        fprintf(fout, "stack hash = %lu\n", *stk->hash_sum);
+        fprintf(fout, "stack hash = %lu\n", stk->stk_hash_sum);
 
     #endif // defined(STACK_HASH_PROTECT)
 
@@ -452,12 +433,19 @@ void StackDump(const char  * const fname,
 
 //-------------------------------------------------------------------------------------
 //verificator
-size_t StackErr(stack *stk, enum CALL_FROM call_from) {
+size_t StackErr(stack *stk) {
 
     size_t errors = 0;
 
-    if (!stk)                               errors |=    1;
-    if (!stk->data.buf)                     errors |=    2;
+    if (!stk) {
+                                            errors |=    1;
+        return errors;
+    }
+
+    if (!stk->data.buf) {
+                                            errors |=    2;
+        return errors;
+    }
     if (stk->size < 0)                      errors |=    4;
     if (stk->capacity <= 0)                 errors |=    8;
     if (stk->size > stk->capacity)          errors |=   16;
@@ -466,7 +454,7 @@ size_t StackErr(stack *stk, enum CALL_FROM call_from) {
 
     #if (defined(DATA_CANARY_PROTECT))
 
-    if (!stk->data.l_canary || *stk->data.l_canary != LEFT_CHICK )
+    if (!stk->data.l_canary || *stk->data.l_canary != LEFT_CHICK)
                                             errors |=  128;
 
     if (!stk->data.r_canary || *stk->data.r_canary != RIGHT_CHICK)
@@ -476,47 +464,34 @@ size_t StackErr(stack *stk, enum CALL_FROM call_from) {
 
     #if (defined(STACK_CANARY_PROTECT))
 
-        if (stk->l_canary != LEFT_CHICK )   errors |=  512;
+        if (stk->l_canary != LEFT_CHICK)    errors |=  512;
         if (stk->r_canary != RIGHT_CHICK)   errors |= 1024;
 
     #endif // defined(STACK_CANARY_PROTECT)
-
-    #if (defined(DATA_HASH_PROTECT))
-
-        Hash_t new_data_hash = 0;
-
-        if (stk->data.buf) {
-
-            new_data_hash = HashMod(stk->data.buf, stk->capacity * sizeof(Elem_t));
-
-        }
-
-        if (call_from == F_BEGIN) {
-            if (new_data_hash != stk->data.hash_sum) errors |= 2048;
-        }
-        else if (call_from == F_END) {
-            stk->data.hash_sum = new_data_hash;
-        }
-
-    #endif // defined(DATA_HASH_PROTECT)
 
     #if (defined(STACK_HASH_PROTECT))
 
         Hash_t new_stack_hash = 0;
 
-        if (stk) {
-            new_stack_hash = HashMod(stk, sizeof(*stk));
-        }
+        new_stack_hash = HashMod(&stk->data, sizeof(stk->data) + sizeof(stk->size) + sizeof(stk->capacity) + sizeof(stk->init_capacity));
 
-        if (call_from == F_BEGIN) {
-            if (*stk->hash_sum != new_stack_hash) errors |= 4096;
-
-        }
-        else if (call_from == F_END) {
-            *stk->hash_sum = new_stack_hash;
+        if (stk->stk_hash_sum != new_stack_hash) {
+            errors |= 4096;
         }
 
     #endif // defined(STACK_HASH_PROTECT)
+
+    #if (defined(DATA_HASH_PROTECT))
+
+        Hash_t new_data_hash = 0;
+
+        new_data_hash = HashMod(stk->data.buf, stk->capacity * sizeof(Elem_t));
+
+        if (new_data_hash != stk->data_hash_sum) {
+            errors |= 2048;
+        }
+
+    #endif // defined(DATA_HASH_PROTECT)
 
     return errors;
 }
@@ -593,7 +568,7 @@ static char * FormErrMsg(size_t err_vec) {
 //-------------------------------------------------------------------------------------
 static int GetNewCapacity(stack *stk, stk_debug_info debug_info) {
 
-    ASSERT_STACK(stk, F_MID, debug_info);
+    ASSERT_STACK(stk, debug_info);
 
     if (stk->size + 1 >= (int) stk->capacity * 3 / 4)
         return stk->capacity * 2;
@@ -601,7 +576,8 @@ static int GetNewCapacity(stack *stk, stk_debug_info debug_info) {
     if (stk->size - 1 <= (int) stk->capacity / 4 + 1 && stk->capacity > stk->init_capacity)
         return stk->capacity / 2;
 
-    ASSERT_STACK(stk, F_MID, debug_info);
+    UpdStackHash(stk);
+    ASSERT_STACK(stk, debug_info);
 
     return stk->capacity;
 }
@@ -616,7 +592,8 @@ static void PrintStackDataDump(FILE *fout, const stack *stk) {
 
     #if (defined(DATA_HASH_PROTECT))
 
-    fprintf(fout, "hash_sum = %lu\n", stk->data.hash_sum);
+    fprintf(fout, "stack_hash_sum = %lu\n", stk->stk_hash_sum);
+    fprintf(fout, "data_hash_sum  = %lu\n", stk->data_hash_sum);
 
     #endif // defined(DATA_HASH_PROTECT)
 
@@ -659,8 +636,8 @@ static void PrintStackDataDump(FILE *fout, const stack *stk) {
 //-------------------------------------------------------------------------------------
 static enum POISON_OUT StackPoison(stack *stk, stk_debug_info debug_info) {
 
-    ASSERT_STACK(stk, F_MID, debug_info);
-    if (StackErr(stk, F_MID))
+    ASSERT_STACK(stk, debug_info);
+    if (StackErr(stk))
         return POISON_ERR_SIDE;
 
     int cnt = stk->size;
@@ -668,8 +645,9 @@ static enum POISON_OUT StackPoison(stack *stk, stk_debug_info debug_info) {
     while (cnt < stk->capacity)
         stk->data.buf[cnt++] = POISON;
 
-    ASSERT_STACK(stk, F_MID, debug_info);
-    if (StackErr(stk, F_MID))
+    UpdStackHash(stk);
+    ASSERT_STACK(stk, debug_info);
+    if (StackErr(stk))
         return POISON_ERR;
 
     return POISON_NO_ERR;
@@ -685,5 +663,40 @@ stk_debug_info UpdDebugInfo(const char *stk_name, const char *filename, int line
     debug_info.line     = line;
 
     return debug_info;
+}
+
+//-------------------------------------------------------------------------------------
+static void UpdStackHash(stack *stk) {
+
+    assert(stk);
+
+    // printf("stk->data[%p]\n"
+        //    "stk->size[%p]\n"
+        //    "stk->capacity[%p]\n"
+        //    "stk->init_capacity[%p]\n"
+        //    "stk->r_canary[%p]\n\n", &stk->data, &stk->size, &stk->capacity, &stk->init_capacity, &stk->r_canary);
+
+
+    #if (defined(DATA_HASH_PROTECT))
+
+        stk->data_hash_sum = HashMod(stk->data.buf, stk->capacity * sizeof(Elem_t));
+
+    #endif // defined(DATA_HASH_PROTECT)
+
+
+    #if (defined(STACK_HASH_PROTECT))
+
+        stk->stk_hash_sum = HashMod(&stk->data, sizeof(stk->data) + sizeof(stk->size) + sizeof(stk->capacity) + sizeof(stk->init_capacity));
+
+    #endif // defined(STACK_HASH_PROTECT)
+
+
 
 }
+
+/*
+University life is full of difficulties.
+First of all, you dont have much time to do home assignments.
+Secondly, in the beginning of my student life i felt lonely because i was far from home.
+In conclusion, student life is full of difficulties but i am sure it is worth it.
+*/
