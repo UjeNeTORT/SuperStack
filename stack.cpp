@@ -670,13 +670,6 @@ static void UpdStackHash(stack *stk) {
 
     assert(stk);
 
-    // printf("stk->data[%p]\n"
-        //    "stk->size[%p]\n"
-        //    "stk->capacity[%p]\n"
-        //    "stk->init_capacity[%p]\n"
-        //    "stk->r_canary[%p]\n\n", &stk->data, &stk->size, &stk->capacity, &stk->init_capacity, &stk->r_canary);
-
-
     #if (defined(DATA_HASH_PROTECT))
 
         stk->data_hash_sum = HashMod(stk->data.buf, stk->capacity * sizeof(Elem_t));
@@ -689,14 +682,4 @@ static void UpdStackHash(stack *stk) {
         stk->stk_hash_sum = HashMod(&stk->data, sizeof(stk->data) + sizeof(stk->size) + sizeof(stk->capacity) + sizeof(stk->init_capacity));
 
     #endif // defined(STACK_HASH_PROTECT)
-
-
-
 }
-
-/*
-University life is full of difficulties.
-First of all, you dont have much time to do home assignments.
-Secondly, in the beginning of my student life i felt lonely because i was far from home.
-In conclusion, student life is full of difficulties but i am sure it is worth it.
-*/

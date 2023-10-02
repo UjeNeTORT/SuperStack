@@ -36,6 +36,7 @@ int main() {
     printf("%d\n", StackPop(&cat, &pop_err, DEBUG_INFO(cat)));
     printf("%d\n", StackPop(&cat, &pop_err, DEBUG_INFO(cat)));
     printf("%d\n", StackPop(&cat, &pop_err, DEBUG_INFO(cat)));
+    cat.data_hash_sum = 10;
     printf("%d\n", StackPop(&cat, &pop_err, DEBUG_INFO(cat)));
     printf("%d\n", StackPop(&cat, &pop_err, DEBUG_INFO(cat)));
     printf("%d\n", StackPop(&cat, &pop_err, DEBUG_INFO(cat)));
