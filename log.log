@@ -466,3 +466,105 @@ buf[0x55ea4c57af98]
 	}
 }
 ------------------------------------------------------
+stack[0x7ffd5ddcf280] &cat from main.cpp (40)
+             called from stack.cpp (251) StackPop
+{
+size     = -1 (MX_STK = 100)
+capacity = 2
+left  stack canary[0x7ffd5ddcf280] = 12938577313804550314 (ok)
+right stack canary[0x7ffd5ddcf2c0] = 12938577313804550314 (ok)
+stack hash = 249165658
+ERRORS: size < 0
+
+stack_hash_sum = 249165658
+data_hash_sum  = 27269692
+l_canary[0x55c6aeeea440] = 12938577313804550314 (ok)
+r_canary[0x55c6aeeea450] = 12938577313804550314 (ok)
+buf[0x55c6aeeea448]
+	{
+		 [   0] = 13634846 (POISON)
+		 [   1] = 13634846 (POISON)
+	}
+}
+------------------------------------------------------
+stack[0x7fffb46f3030] &cat from main.cpp (41)
+             called from stack.cpp (236) StackPop
+{
+size     = 1 (MX_STK = 100)
+capacity = 8
+left  stack canary[0x7fffb46f3030] = 12938577313804550314 (ok)
+right stack canary[0x7fffb46f3070] = 12938577313804550314 (ok)
+stack hash = 0
+ERRORS: stack hash does not match, sudden attack
+
+stack_hash_sum = 0
+data_hash_sum  = 95443922
+l_canary[0x557ee46cc440] = 12938577313804550314 (ok)
+r_canary[0x557ee46cc468] = 12938577313804550314 (ok)
+buf[0x557ee46cc448]
+	{
+		*[   0] =      0
+		 [   1] = 13634846 (POISON)
+		 [   2] = 13634846 (POISON)
+		 [   3] = 13634846 (POISON)
+		 [   4] = 13634846 (POISON)
+		 [   5] = 13634846 (POISON)
+		 [   6] = 13634846 (POISON)
+		 [   7] = 13634846 (POISON)
+	}
+}
+------------------------------------------------------
+stack[0x7fffc6621fc0] &cat from main.cpp (41)
+             called from stack.cpp (236) StackPop
+{
+size     = 1 (MX_STK = 100)
+capacity = 8
+left  stack canary[0x7fffc6621fc0] = 12938577313804550314 (ok)
+right stack canary[0x7fffc6622000] = 12938577313804550314 (ok)
+stack hash = 205284631
+ERRORS: data hashes does not match, sudden attack
+
+stack_hash_sum = 205284631
+data_hash_sum  = 0
+l_canary[0x5610a5c32440] = 12938577313804550314 (ok)
+r_canary[0x5610a5c32468] = 12938577313804550314 (ok)
+buf[0x5610a5c32448]
+	{
+		*[   0] =      0
+		 [   1] = 13634846 (POISON)
+		 [   2] = 13634846 (POISON)
+		 [   3] = 13634846 (POISON)
+		 [   4] = 13634846 (POISON)
+		 [   5] = 13634846 (POISON)
+		 [   6] = 13634846 (POISON)
+		 [   7] = 13634846 (POISON)
+	}
+}
+------------------------------------------------------
+stack[0x7fffb7452bf0] &cat from main.cpp (41)
+             called from stack.cpp (236) StackPop
+{
+size     = 1 (MX_STK = 100)
+capacity = 8
+left  stack canary[0x7fffb7452bf0] = 12938577313804550314 (ok)
+right stack canary[0x7fffb7452c30] = 12938577313804550314 (ok)
+stack hash = 529762905
+ERRORS: data hashes does not match, sudden attack
+
+stack_hash_sum = 529762905
+data_hash_sum  = 95443922
+l_canary[0x55cf3242b440] = 12938577313804550314 (ok)
+r_canary[0x55cf3242b468] = 12938577313804550314 (ok)
+buf[0x55cf3242b448]
+	{
+		*[   0] =     22
+		 [   1] = 13634846 (POISON)
+		 [   2] = 13634846 (POISON)
+		 [   3] = 13634846 (POISON)
+		 [   4] = 13634846 (POISON)
+		 [   5] = 13634846 (POISON)
+		 [   6] = 13634846 (POISON)
+		 [   7] = 13634846 (POISON)
+	}
+}
+------------------------------------------------------

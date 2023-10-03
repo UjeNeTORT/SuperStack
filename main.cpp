@@ -11,47 +11,34 @@ int main() {
 
     StackCtor(&cat, 1, DEBUG_INFO(cat));
 
-    StackPush(&cat,  1, DEBUG_INFO(cat));
-    StackPush(&cat,  2, DEBUG_INFO(cat));
-    StackPush(&cat,  3, DEBUG_INFO(cat));
-    StackPush(&cat,  4, DEBUG_INFO(cat));
-    StackPush(&cat,  5, DEBUG_INFO(cat));
-    StackPush(&cat,  6, DEBUG_INFO(cat));
-    StackPush(&cat,  7, DEBUG_INFO(cat));
-    StackPush(&cat,  8, DEBUG_INFO(cat));
-    StackPush(&cat,  9, DEBUG_INFO(cat));
-    StackPush(&cat, 10, DEBUG_INFO(cat));
-    StackPush(&cat, 11, DEBUG_INFO(cat));
-    StackPush(&cat, 12, DEBUG_INFO(cat));
-    StackPush(&cat, 13, DEBUG_INFO(cat));
-    StackPush(&cat, 14, DEBUG_INFO(cat));
-    StackPush(&cat, 15, DEBUG_INFO(cat));
-    StackPush(&cat, 16, DEBUG_INFO(cat));
-    StackPush(&cat, 17, DEBUG_INFO(cat));
-    StackPush(&cat, 18, DEBUG_INFO(cat));
+    for (int i = 0; i < 20; i++)
+        PushStack(&cat, i);
 
     enum POP_OUT pop_err = POP_NO_ERR;
 
-    printf("%d\n", StackPop(&cat, &pop_err, DEBUG_INFO(cat)));
-    printf("%d\n", StackPop(&cat, &pop_err, DEBUG_INFO(cat)));
-    printf("%d\n", StackPop(&cat, &pop_err, DEBUG_INFO(cat)));
-    printf("%d\n", StackPop(&cat, &pop_err, DEBUG_INFO(cat)));
-    cat.data_hash_sum = 10;
-    printf("%d\n", StackPop(&cat, &pop_err, DEBUG_INFO(cat)));
-    printf("%d\n", StackPop(&cat, &pop_err, DEBUG_INFO(cat)));
-    printf("%d\n", StackPop(&cat, &pop_err, DEBUG_INFO(cat)));
-    printf("%d\n", StackPop(&cat, &pop_err, DEBUG_INFO(cat)));
-    printf("%d\n", StackPop(&cat, &pop_err, DEBUG_INFO(cat)));
-    printf("%d\n", StackPop(&cat, &pop_err, DEBUG_INFO(cat)));
-    printf("%d\n", StackPop(&cat, &pop_err, DEBUG_INFO(cat)));
-    printf("%d\n", StackPop(&cat, &pop_err, DEBUG_INFO(cat)));
-    printf("%d\n", StackPop(&cat, &pop_err, DEBUG_INFO(cat)));
-    printf("%d\n", StackPop(&cat, &pop_err, DEBUG_INFO(cat)));
-    printf("%d\n", StackPop(&cat, &pop_err, DEBUG_INFO(cat)));
-    printf("%d\n", StackPop(&cat, &pop_err, DEBUG_INFO(cat)));
-    printf("%d\n", StackPop(&cat, &pop_err, DEBUG_INFO(cat)));
+    printf("%d\n", PopStack(&cat, &pop_err));
+    printf("%d\n", PopStack(&cat, &pop_err));
+    printf("%d\n", PopStack(&cat, &pop_err));
+    printf("%d\n", PopStack(&cat, &pop_err));
+    printf("%d\n", PopStack(&cat, &pop_err));
+    printf("%d\n", PopStack(&cat, &pop_err));
+    printf("%d\n", PopStack(&cat, &pop_err));
+    printf("%d\n", PopStack(&cat, &pop_err));
+    printf("%d\n", PopStack(&cat, &pop_err));
+    printf("%d\n", PopStack(&cat, &pop_err));
+    printf("%d\n", PopStack(&cat, &pop_err));
+    printf("%d\n", PopStack(&cat, &pop_err));
+    printf("%d\n", PopStack(&cat, &pop_err));
+    printf("%d\n", PopStack(&cat, &pop_err));
+    printf("%d\n", PopStack(&cat, &pop_err));
+    printf("%d\n", PopStack(&cat, &pop_err));
+    printf("%d\n", PopStack(&cat, &pop_err));
+    printf("%d\n", PopStack(&cat, &pop_err));
+    printf("%d\n", PopStack(&cat, &pop_err));
 
-    Elem_t val = StackPop(&cat, &pop_err, DEBUG_INFO(cat));
+
+
+    Elem_t val = PopStack(&cat, &pop_err);
     if (pop_err == POP_NO_ERR)
         printf("%d\n", val);
     else

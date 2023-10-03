@@ -37,11 +37,14 @@ typedef size_t Canary_t;
 
     #define DEBUG_INFO(stk) (UpdDebugInfo((#stk), __FILE__, __LINE__))
 
+    #define ON_DEBUG(...) __VA_ARGS__;
+
 #else
     #define STACK_DUMP(fname, stk, err_vector) ;
     #define ADD_ERR_MSG(prev, msg)             ;
     #define ASSERT_STACK(stk)                  ;
     #define DEBUG_INFO(stk)                    {NULL, NULL, -1}
+    #define ON_DEBUG(...)
 #endif // defined(DEBUG_MODE)
 
 //-------------------------------------------------------------------------------------
@@ -158,9 +161,9 @@ enum CALL_FROM {
 
 //-------------------------------------------------------------------------------------
 /**
- * @param [out] stk stack-variable, not valid
- * @param [in] capacity required stack capacity
- * @param [in] debug_info contains info about place from which we got into function
+ * @param [out] stk        stack-variable, not valid
+ * @param [in]  capacity   required stack capacity
+ * @param [in]  debug_info contains info about place from which we got into function
  *
  * Stack Constructor: allocates memory for data, sets size to 0, sets canaries, allocates memory for hash,
  *                    poisons all the memory.
@@ -172,11 +175,13 @@ StackCtor(stack          *stk,
           int            capacity,
           stk_debug_info debug_info);
 
+#define CtorStack(stk, capacity) StackCtor(stk, capacity, DEBUG_INFO(stk))
+
 //-------------------------------------------------------------------------------------
 /**
- * @param [out] stk stack
+ * @param [out] stk          stack
  * @param [in]  new_capacity new required capacity of the stack (previously calculated in GetNewCapacity)
- * @param [in] debug_info contains info about place from which we got into function
+ * @param [in]  debug_info   contains info about place from which we got into function
  *
  * @brief reallocs data with canaries, poisons it, to do it
  *                                                 calls inner function StackDataRealloc
@@ -186,26 +191,32 @@ StackRealloc(stack          *stk,
              int            new_capacity,
              stk_debug_info debug_info);
 
+#define ReallocStack(stk, new_capacity) StackRealloc(stk, new_capacity, DEBUG_INFO(stk))
+
 //-------------------------------------------------------------------------------------
 enum DTOR_OUT
 /**
- * @param [out] stk stack
- * @param [in] debug_info contains info about place from which we got into function
+ * @param [out] stk        stack
+ * @param [in]  debug_info contains info about place from which we got into function
  *
  * destructs stack
 */
 StackDtor(stack *stk, stk_debug_info debug_info);
 
+#define DtorStack(stk) StackDtor(stk, DEBUG_INFO(stk))
+
 //-------------------------------------------------------------------------------------
 /**
  * @param [out] stk  stack
  * @param [in]  value value to be pushed in stack
- * @param [in] debug_info contains info about place from which we got into function
+ * @param [in]  debug_info contains info about place from which we got into function
 */
 enum PUSH_OUT
 StackPush(stack          *stk,
           Elem_t         value,
           stk_debug_info debug_info);
+
+#define PushStack(stk, value) StackPush(stk, value, DEBUG_INFO(stk))
 
 //-------------------------------------------------------------------------------------
 /**
@@ -218,6 +229,8 @@ StackPop(stack          *stk,
          enum POP_OUT   *err,
          stk_debug_info debug_info);
 
+#define PopStack(stk, err) StackPop(stk, err, DEBUG_INFO(stk))
+
 //-------------------------------------------------------------------------------------
 /**
  * @param [in] fname      output file name
@@ -229,7 +242,7 @@ StackPop(stack          *stk,
  * @param [in] stk_debug  debug info
  * @param [in] debug_info contains info about place from which we got into function
  *
- * @brief prints whole info about stack to file
+ * @brief inner func, prints whole info about stack to file
  *
  * WORKS ONLY IN DEBUG MODE
 */
@@ -247,7 +260,7 @@ StackDump(const char  * const fname,
 /**
  * @param [in] stk stack
  *
- * @brief forms error vector - number like 1011100000 where 1 - has error, 0 - does not have error,
+ * @brief inner func, forms error vector - number like 1011100000 where 1 - has error, 0 - does not have error,
 */
 size_t StackErr(stack *stk);
 
